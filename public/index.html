@@ -325,7 +325,6 @@ function showAuthError(error) {
     'auth/web-storage-unsupported':'Penyimpanan sesi browser tidak tersedia. Aktifkan penyimpanan situs untuk domain ini.',
     'auth/network-request-failed':'Koneksi ke Firebase gagal. Periksa internet lalu coba lagi.',
     'auth/invalid-credential':'Login Google gagal diverifikasi. Periksa konfigurasi OAuth Firebase.',
-    'auth/unauthorized-domain':'Domain Vercel belum diizinkan di Firebase Authentication > Settings > Authorized domains.',
     'auth/invalid-api-key':'FIREBASE_WEB_API_KEY tidak cocok dengan Firebase project.',
     'auth/redirect-cancelled-by-user':'Proses pengalihan login dibatalkan.',
     'auth/redirect-operation-pending':'Masih ada proses login Google yang belum selesai. Muat ulang halaman.',
@@ -346,7 +345,10 @@ async function serverCall(name, data={}) {
       body:JSON.stringify({action:name,data})
     });
     const result=await response.json().catch(()=>({}));
-    if(!response.ok || result.ok===false) throw new Error(result.message||`Permintaan gagal (${response.status}).`);
+    if(!response.ok || result.ok===false) {
+      const extra=result.stage?` [${result.stage}]`:'';
+      throw new Error((result.message||`Permintaan gagal (${response.status}).`)+extra);
+    }
     return result;
   } catch(error) { throw new Error(showAuthError(error)); }
 }
@@ -400,7 +402,17 @@ if (!firebaseConfig || !firebaseConfig.apiKey || !firebaseConfig.projectId || !f
         button.textContent='Masuk dengan Google';
       }
     });
-    $('google-logout').addEventListener('click',async()=>{ try{ await signOut(auth); }catch(error){message('auth-msg',showAuthError(error));} });
+    $('google-logout').addEventListener('click',async()=>{
+      const button=$('google-logout'); button.disabled=true; button.textContent='Keluar...';
+      try {
+        await signOut(auth);
+        activeUser=null; isOwner=false; onlineData={licenses:[],events:[]};
+        toggle($('user-panel'),false); toggle($('owner-wrap'),false); toggle($('lock'),false); toggle($('work'),false);
+        $('auth-account').textContent=''; $('my-licenses').textContent=''; $('trial-result').innerHTML=''; $('trial-msg').textContent='';
+        message('auth-msg','Kamu sudah keluar dari akun Google.',true);
+      } catch(error) { message('auth-msg',showAuthError(error)); }
+      finally { button.disabled=false; button.textContent='Keluar'; }
+    });
 
     onAuthStateChanged(auth,async user=>{
       activeUser=user;
@@ -413,8 +425,9 @@ if (!firebaseConfig || !firebaseConfig.apiKey || !firebaseConfig.projectId || !f
       toggle($('owner-wrap'),signed && (user.email||'').toLowerCase()===OWNER_EMAIL);
       isOwner=signed && (user.email||'').toLowerCase()===OWNER_EMAIL;
       if(!signed){
-        toggle($('lock'),false);
-        toggle($('work'),false);
+        toggle($('user-panel'),false); toggle($('owner-wrap'),false);
+        toggle($('lock'),false); toggle($('work'),false);
+        $('my-licenses').textContent=''; $('trial-result').innerHTML=''; $('trial-msg').textContent='';
         message('auth-msg','Silakan masuk dengan Google untuk melanjutkan.',false);
         return;
       }
@@ -437,6 +450,7 @@ $('trial-create').addEventListener('click',async()=>{
   const button=$('trial-create'); setBusy(button,true,'Membuat trial...');
   try{
     const result=await serverCall('startTrial');
+    if(!result || typeof result.key!=='string' || !result.key) throw new Error('Server merespons tanpa kunci trial. Buka /api/health dan periksa log Vercel.');
     $('trial-result').innerHTML=keyCard(result.key,'Kunci trial berhasil dibuat',`Berlaku 7 hari • Berakhir ${dateText(result.expiresAtMs)} • Batas 1 perangkat`);
     message('trial-msg','Trial dibuat. Salin kunci lalu masukkan ke aplikasi Basuki Music.',true);
     await loadMyLicenses();
@@ -461,8 +475,9 @@ async function loadMyLicenses(){
   $('my-licenses').textContent='Memuat lisensi...';
   try{
     const result=await serverCall('getMyLicenses');
-    if(!result.licenses.length){$('my-licenses').textContent='Belum ada lisensi pada akun ini.';return;}
-    $('my-licenses').innerHTML=result.licenses.map(item=>{
+    const licenses=Array.isArray(result && result.licenses)?result.licenses:[];
+    if(!licenses.length){$('my-licenses').textContent='Belum ada lisensi pada akun ini.';return;}
+    $('my-licenses').innerHTML=licenses.map(item=>{
       const expired=!item.isPermanent && item.expiresAtMs && item.expiresAtMs<=Date.now();
       const keyBlock=item.key?`<div class="online-key">${escapeHtml(item.key)}</div><div class="tools"><button class="ghost small" type="button" data-copy="${escapeHtml(item.key)}">Salin kunci</button></div>`:'';
       return `<div class="item"><b>${escapeHtml(item.kind==='trial'?'Trial 7 hari':item.isPermanent?'Lisensi permanen':'Lisensi Basuki Music')}</b><div class="mut">Email: ${escapeHtml(item.email||'—')}<br>Berlaku: ${item.isPermanent?'Permanen':dateText(item.expiresAtMs)}<br>Batas perangkat: ${Number(item.deviceLimit)||1}</div><span class="badge ${item.revoked||expired?'bad':'good'}">${item.revoked?'Diblokir':expired?'Kedaluwarsa':'Terdaftar'}</span>${keyBlock}</div>`;
@@ -487,8 +502,10 @@ $('online-create').addEventListener('click',async()=>{
       days:Number($('online-days').value), quantity:Number($('online-qty').value),
       deviceLimit:Number($('online-limit').value), permanent:$('online-permanent').checked
     });
-    $('online-created').innerHTML=data.licenses.map((item,index)=>keyCard(item.key,`Kunci ${index+1} dibuat`,`${item.isPermanent?'Owner permanen':item.days+' hari'} • ${item.deviceLimit} perangkat • ${item.email||'Email diklaim pengguna pertama'}`)).join('');
-    message('online-create-msg',`${data.licenses.length} kunci berhasil dibuat. Salin dan simpan kunci sekarang; server hanya menyimpan hash.`,true);
+    const created=Array.isArray(data && data.licenses)?data.licenses:[];
+    if(!created.length) throw new Error('Server tidak mengembalikan daftar kunci. Periksa /api/health dan Function Logs Vercel.');
+    $('online-created').innerHTML=created.map((item,index)=>keyCard(item.key,`Kunci ${index+1} dibuat`,`${item.isPermanent?'Owner permanen':item.days+' hari'} • ${item.deviceLimit} perangkat • ${item.email||'Email diklaim pengguna pertama'}`)).join('');
+    message('online-create-msg',`${created.length} kunci berhasil dibuat. Salin dan simpan kunci sekarang.`,true);
     $('online-note').value='';
     await loadOnlineAdmin();
   }catch(error){message('online-create-msg',error.message);}
@@ -501,7 +518,7 @@ async function loadOnlineAdmin(){
   $('online-licenses').textContent='Memuat daftar lisensi...';
   try{
     onlineData=await serverCall('adminListLicenses');
-    const licenses=onlineData.licenses||[], events=onlineData.events||[];
+    const licenses=Array.isArray(onlineData && onlineData.licenses)?onlineData.licenses:[], events=Array.isArray(onlineData && onlineData.events)?onlineData.events:[];
     const activeDevices=licenses.reduce((sum,item)=>sum+(item.devices||[]).filter(d=>d.status==='active').length,0);
     const blocked=licenses.filter(item=>item.revoked).length;
     $('online-stats').innerHTML=`<div class="key"><b>${licenses.length}</b><br><span class="mut">Lisensi terbaru</span></div><div class="key"><b>${activeDevices}</b><br><span class="mut">Perangkat aktif</span></div><div class="key"><b>${blocked}</b><br><span class="mut">Lisensi diblokir</span></div>`;
