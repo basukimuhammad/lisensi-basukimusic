@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Semua data lisensi dan perangkat hanya boleh diakses melalui API server Vercel.
+    // Firebase Admin SDK di server melewati Firestore Rules; browser tidak memiliki akses langsung.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

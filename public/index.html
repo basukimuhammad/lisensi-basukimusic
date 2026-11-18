@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Basuki Music — Admin Lisensi</title>
+<style>
+  :root { color-scheme: dark; --bg:#0d1017; --card:#171c27; --line:#2a3142; --ink:#eef1f7; --mut:#98a2b8; --a:#7c6cff; --b:#27c7ff; --bad:#ff6b6b; --good:#4ade80; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; padding:18px; max-width:760px; margin-inline:auto; }
+  h1 { font-size:21px; margin:6px 0 2px; } h2 { font-size:16px; margin:0 0 10px; }
+  .mut { color:var(--mut); font-size:13px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; margin:14px 0; }
+  label { display:block; font-size:13px; color:var(--mut); margin:10px 0 4px; }
+  input, select, textarea { width:100%; padding:11px 12px; border-radius:10px; border:1px solid var(--line); background:#0f131c; color:var(--ink); font:inherit; }
+  .row { display:flex; gap:10px; } .row > * { flex:1; }
+  button { padding:11px 16px; border:0; border-radius:10px; background:linear-gradient(135deg,var(--a),var(--b)); color:#fff; font:inherit; font-weight:700; }
+  button.ghost { background:#222a3a; color:var(--ink); font-weight:600; }
+  button:disabled { opacity:.55; }
+  .radio { display:flex; gap:8px; align-items:flex-start; margin:8px 0; color:var(--ink); font-size:14px; }
+  .radio input { width:auto; margin-top:4px; }
+  .msg { min-height:20px; font-size:13px; margin-top:8px; } .bad { color:var(--bad); } .good { color:var(--good); }
+  .key { font:12.5px/1.45 ui-monospace,Menlo,Consolas,monospace; word-break:break-all; background:#0f131c; border:1px solid var(--line); border-radius:10px; padding:10px; margin:6px 0; user-select:all; }
+  .item { border-top:1px solid var(--line); padding:10px 0; } .item:first-child { border-top:0; }
+  .tools { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+  .small { font-size:12px; padding:7px 11px; }
+  [hidden] { display:none !important; }
+  .warn { background:#2b2118; border:1px solid #5b4326; color:#ffcf99; border-radius:10px; padding:10px 12px; font-size:13px; }
+  .badge{display:inline-block;border-radius:99px;padding:3px 9px;font-size:11px;font-weight:800;margin-top:6px}.badge.good{background:#183b30;color:#8ff0be}.badge.bad{background:#482b39;color:#ffb7c2}.online-license{border-top:1px solid var(--line);padding:14px 0}.online-license:first-child{border-top:0}.online-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.online-meta{font-size:12px;color:var(--mut);line-height:1.55;overflow-wrap:anywhere}.online-device{border-top:1px dashed #ffffff20;margin-top:10px;padding:10px 0;display:flex;justify-content:space-between;gap:10px}.online-actions{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.online-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.online-stats .key{text-align:center}.online-key{font:12px/1.5 ui-monospace,Menlo,monospace;overflow-wrap:anywhere;padding:10px;border:1px solid var(--line);background:#0f131c;border-radius:10px;margin:8px 0}.online-result{border-top:1px solid var(--line);padding:12px 0}.inline-field{display:flex;gap:8px;align-items:center}.inline-field input{width:auto}
+  @media(max-width:560px){.online-head,.online-device{flex-direction:column}.online-stats{grid-template-columns:1fr}.online-stats .key{text-align:left}}
+
+</style>
+</head>
+<body>
+<h1>Pembuat Kunci Lisensi</h1>
+<div class="mut">Basuki Music - jangan bagikan file ini kepada siapa pun.</div>
+
+
+<div class="card" id="auth-card">
+  <h2>Akun Google</h2>
+  <div class="mut" id="auth-intro">Masuk dengan Google. Akun Owner dapat membuka pembuat kunci dan pengelolaan perangkat; pengguna dapat mengambil trial 7 hari atau menghubungkan kunci pembelian dari halaman yang sama.</div>
+  <div class="tools"><button id="google-login" type="button">Masuk dengan Google</button><button class="ghost" id="google-logout" type="button" hidden>Keluar</button></div>
+  <div class="msg" id="auth-msg"></div>
+  <div class="mut" id="auth-account"></div>
+</div>
+
+<div id="user-panel" hidden>
+  <div class="card">
+    <h2>Trial gratis 7 hari</h2>
+    <div class="mut">Satu kali untuk satu akun Google terverifikasi. Setelah berhasil, salin kunci dan masukkan ke aplikasi Basuki Music.</div>
+    <div class="tools"><button id="trial-create" type="button">Ambil trial 7 hari</button></div>
+    <div class="msg" id="trial-msg"></div>
+    <div id="trial-result"></div>
+  </div>
+  <div class="card">
+    <h2>Hubungkan kunci pembelian</h2>
+    <div class="mut">Masuk menggunakan akun Google yang sesuai dengan email pembeli (jika Owner mengunci kunci ke email tertentu), lalu hubungkan kuncimu di sini. Untuk kunci v11 lama jenis masa aktif sejak diaktifkan, masukkan kunci langsung ke APK setelah pembaruan agar tanggal aktivasi lama tetap terjaga.</div>
+    <label for="claim-key">Kunci lisensi</label>
+    <input id="claim-key" type="text" autocomplete="off" spellcheck="false" placeholder="BSK2-... atau kunci v11 lama">
+    <div class="tools"><button id="claim-submit" type="button">Hubungkan kunci</button></div>
+    <div class="msg" id="claim-msg"></div>
+  </div>
+  <div class="card">
+    <h2>Lisensi akun ini</h2>
+    <div class="tools"><button class="ghost small" id="my-refresh" type="button">Muat ulang</button></div>
+    <div id="my-licenses" class="mut">Belum ada lisensi yang dimuat.</div>
+  </div>
+</div>
+
+<div id="owner-wrap" hidden>
+
+<div class="card" id="lock">
+  <h2>Buka alat admin</h2>
+  <label for="pass">Passphrase</label>
+  <input id="pass" type="password" autocomplete="off" placeholder="passphrase admin">
+  <div class="tools"><button id="unlock" type="button">Buka</button></div>
+  <div class="msg" id="lockmsg"></div>
+</div>
+
+<div id="work" hidden>
+
+  <div class="card" id="online-admin">
+    <h2>Pengelolaan lisensi online</h2>
+    <div class="mut">Kunci dari bagian ini tersimpan di server. Owner dapat mengatur masa aktif, batas perangkat, email pembeli, pemblokiran, dan riwayat aktivasi.</div>
+    <div class="row">
+      <div style="flex:2"><label for="online-email">Email Google pembeli (opsional)</label><input id="online-email" type="email" placeholder="pembeli@gmail.com"></div>
+      <div><label for="online-limit">Batas perangkat</label><input id="online-limit" type="number" min="1" max="50" value="1"></div>
+    </div>
+    <div class="row">
+      <div><label for="online-days">Masa berlaku (hari, maksimal 365)</label><input id="online-days" type="number" min="1" max="365" value="30"></div>
+      <div><label for="online-qty">Jumlah kunci</label><input id="online-qty" type="number" min="1" max="100" value="1"></div>
+    </div>
+    <label for="online-note">Catatan pesanan</label><input id="online-note" type="text" maxlength="180" placeholder="Nama pembeli / nomor pesanan">
+    <div class="radio"><input type="checkbox" id="online-permanent"><label for="online-permanent" style="margin:0;color:var(--ink)"><b>Lisensi Owner permanen</b> (hanya untuk akun Owner, satu kunci)</label></div>
+    <div class="warn">Jika batas perangkat penuh, aktivasi dari HP baru otomatis menggantikan perangkat yang paling lama tidak aktif. Kunci biasa maksimal 365 hari.</div>
+    <div class="tools"><button id="online-create" type="button">Buat kunci online</button><button class="ghost" id="online-refresh" type="button">Segarkan dashboard</button><button class="ghost" id="online-csv" type="button">Unduh CSV online</button></div>
+    <div class="msg" id="online-create-msg"></div>
+    <div id="online-created"></div>
+    <h2 style="margin-top:22px">Ringkasan</h2>
+    <div class="online-stats" id="online-stats"><div class="key">Lisensi: —</div><div class="key">Perangkat aktif: —</div><div class="key">Diblokir: —</div></div>
+    <h2 style="margin-top:22px">Daftar lisensi & perangkat</h2>
+    <div id="online-licenses"><div class="mut">Tekan Segarkan dashboard untuk memuat data.</div></div>
+    <h2 style="margin-top:22px">Riwayat aktivitas</h2>
+    <div id="online-events"><div class="mut">Belum ada aktivitas dimuat.</div></div>
+  </div>
+  <div class="card">
+    <h2>Pembuat kunci lama v11 (offline)</h2>
+    <div class="row">
+      <div><label for="dur">Lama berlaku (maksimal 365 hari)</label><input id="dur" type="number" min="1" max="365" step="1" value="30"></div>
+      <div><label for="unit">Satuan</label>
+        <select id="unit"><option value="jam">Jam</option><option value="hari" selected>Hari</option><option value="bulan">Bulan (30 hari)</option><option value="tahun">Tahun (365 hari)</option><option value="life" disabled>Seumur hidup (khusus Owner online)</option></select></div>
+      <div><label for="qty">Jumlah kunci</label><input id="qty" type="number" min="1" max="200" step="1" value="1"></div>
+    </div>
+    <label>Kapan masa berlaku mulai dihitung?</label>
+    <div class="radio"><input type="radio" name="mode" id="m-abs" value="abs" checked><label for="m-abs" style="margin:0;color:var(--ink)"><b>Dari sekarang (disarankan).</b> Tanggal habis dikunci di dalam kunci. Aman dari akal-akalan hapus data aplikasi. Buat kunci saat ada pesanan, jangan ditumpuk.</label></div>
+    <div class="radio"><input type="radio" name="mode" id="m-rel" value="rel"><label for="m-rel" style="margin:0;color:var(--ink)"><b>Sejak diaktifkan pembeli.</b> Bisa dibuat duluan dan dijual kapan saja, tapi pembeli yang paham bisa memperpanjang dengan menghapus data aplikasi.</label></div>
+    <label for="note">Catatan (nama pembeli / nomor pesanan, hanya untuk arsip Anda)</label>
+    <input id="note" type="text" placeholder="mis. Budi - WA 0812xxxx - order #123">
+    <div class="mut">Tetap tersedia untuk kompatibilitas kunci v11 yang sudah ada. Untuk kunci baru yang bisa dikelola (blokir dan batas perangkat), gunakan pembuat kunci online di bawah.</div>
+    <div class="tools"><button id="gen" type="button">Buat kunci lama v11</button></div>
+    <div class="msg" id="genmsg"></div>
+    <div id="out"></div>
+  </div>
+
+  <div class="card">
+    <h2>Riwayat kunci lama v11</h2>
+    <div class="mut">Riwayat kunci offline ini tersimpan di browser ini saja. Kunci online tersimpan di server dan dikelola pada dashboard di atas.</div>
+    <div class="tools">
+      <button class="ghost small" id="csv" type="button">Unduh CSV</button>
+      <button class="ghost small" id="revoke" type="button">Salin ID kunci v11</button>
+      <button class="ghost small" id="clear" type="button">Hapus riwayat</button>
+    </div>
+    <div class="msg" id="histmsg"></div>
+    <div id="hist"></div>
+  </div>
+
+  <div class="card">
+    <h2>Ganti passphrase</h2>
+    <div class="mut">Menghasilkan file admin baru yang dikunci dengan passphrase baru. Simpan file lama sampai file baru teruji.</div>
+    <label for="np">Passphrase baru (minimal 10 karakter)</label>
+    <input id="np" type="password" autocomplete="off">
+    <div class="tools"><button class="ghost" id="chpw" type="button">Unduh file admin baru</button></div>
+    <div class="msg" id="pwmsg"></div>
+  </div>
+
+  <div class="warn">
+    <b>Catatan penting.</b><br>
+    1) Untuk kontrol perangkat dan pencabutan langsung, HP harus tersambung ke internet saat aplikasi memvalidasi lisensi.<br>
+    2) Kunci baru sebaiknya dibuat melalui "Buat kunci online". Kunci lama v11 tetap diterima dan didaftarkan ke server saat pertama kali dipakai pada aplikasi yang sudah diperbarui.<br>
+    3) Kunci privat lama tetap tersimpan terenkripsi di file ini. Simpan salinan HTML asli dan passphrase di tempat aman.
+  </div>
+</div>
+</div><!-- /owner-wrap -->
+
+<script type="application/json" id="pub">{"kty":"EC","crv":"P-256","x":"5LBo4M1HIh8e7ksNYT0m8VojRQgRkgUuGTyzGAMQqxo","y":"hthL9Z8MgV985dYIglC-tlRm1IF31DhltzNODrBtfL4"}</script>
+<script type="application/json" id="enc">{"salt":"RR3ldOIsnDNWHtEoiCFybA==","iv":"3uJvLugQVryOdOY+","iter":300000,"ct":"+Jxd8DMGp7puberkxHhrVfNl7UKtxROfG1TzMXiWMe/33WJ20VKwIGLEFX1qDCf40caMDqvf7xa2H5hfT0GJj2BL/rlVNBy6nPilSYR/SaUrAKYp/P73Q5fZS7byVJzBy4zvUMZll03oqEh2cyP0VcAIDXeTt2P6wpXmRxyXWQjCazcsWEHu2zOAbHRfmK7rNp9Qq5VfTWF1i9tbGo+zXiRzWvcrlcxyL109BA+EuUAmAtzHxWj7NWpdI9T41Hkfv8rZSiY12X8Pj71KrkiUFZQkW1B16D7Rt+xp3zRe"}</script>
+<script>
+//CORE-START
+const A32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+function b32enc(u8) {
+  let bits = 0, v = 0, o = '';
+  for (let i = 0; i < u8.length; i++) {
+    v = (v << 8) | u8[i]; bits += 8;
+    while (bits >= 5) { bits -= 5; o += A32[(v >> bits) & 31]; }
+    v &= (1 << bits) - 1;
+  }
+  if (bits > 0) o += A32[(v << (5 - bits)) & 31];
+  return o;
+}
+function groups(s) { return 'BSK-' + s.match(/.{1,6}/g).join('-'); }
+const b64d = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+const b64e = u => { let s = ''; for (let i = 0; i < u.length; i++) s += String.fromCharCode(u[i]); return btoa(s); };
+async function deriveAes(pass, salt, iter, usage) {
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: salt, iterations: iter, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, [usage]);
+}
+async function decryptPriv(pass, enc) {
+  const aes = await deriveAes(pass, b64d(enc.salt), enc.iter, 'decrypt');
+  const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64d(enc.iv) }, aes, b64d(enc.ct));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+async function encryptPriv(pass, jwk) {
+  const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12)), iter = 300000;
+  const aes = await deriveAes(pass, salt, iter, 'encrypt');
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, aes, new TextEncoder().encode(JSON.stringify(jwk))));
+  return { salt: b64e(salt), iv: b64e(iv), iter: iter, ct: b64e(ct) };
+}
+function importPriv(jwk) { return crypto.subtle.importKey('jwk', jwk, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']); }
+const UNITS = { jam: 3600, hari: 86400, bulan: 30 * 86400, tahun: 365 * 86400 };
+// mode: 'abs' (tanggal habis tetap) | 'rel' (dihitung sejak diaktifkan); unit: jam|hari|bulan|tahun|life
+function plan(mode, n, unit, nowSec) {
+  if (unit === 'life') throw new Error('Kunci permanen hanya dapat dibuat melalui opsi Lisensi Owner permanen online.');
+  n = Number(n);
+  if (!(n >= 1) || Math.floor(n) !== n) throw new Error('Lama berlaku harus bilangan bulat minimal 1');
+  const secs = n * UNITS[unit];
+  if (!secs) throw new Error('Satuan tidak dikenal');
+  if (secs > 365 * 86400) throw new Error('Masa berlaku kunci biasa maksimal 365 hari.');
+  if (mode === 'abs') {
+    const val = Math.floor(nowSec) + secs;
+    if (val > 4294967295) throw new Error('Tanggal habis terlalu jauh');
+    return { kind: 0, val: val, text: 'Habis ' + new Date(val * 1000).toLocaleString('id-ID') };
+  }
+  if (secs > 4294967295) throw new Error('Durasi terlalu panjang');
+  return { kind: 1, val: secs, text: n + ' ' + unit + ' sejak diaktifkan' };
+}
+async function makeKey(priv, kind, val, ver) {
+  const pl = new Uint8Array(10); pl[0] = ver || 1; pl[1] = kind;
+  pl[2] = (val >>> 24) & 255; pl[3] = (val >>> 16) & 255; pl[4] = (val >>> 8) & 255; pl[5] = val & 255;
+  crypto.getRandomValues(pl.subarray(6, 10));
+  const data = new Uint8Array(22); data.set(new TextEncoder().encode('BASUKI-LIC-1')); data.set(pl, 12);
+  const sig = new Uint8Array(await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, priv, data));   // 64 byte (r||s)
+  const all = new Uint8Array(74); all.set(pl); all.set(sig, 10);
+  return { key: groups(b32enc(all)), id: Array.from(pl.slice(6, 10)).map(x => x.toString(16).padStart(2, '0')).join('') };
+}
+//CORE-END
+
+(function () {
+  const $ = id => document.getElementById(id);
+  const ENC = JSON.parse($('enc').textContent), PUBJ = JSON.parse($('pub').textContent);
+  let PRIV = null, PRIVJWK = null;
+  const HK = 'bsk_admin_hist';
+  const hist = () => { try { return JSON.parse(localStorage.getItem(HK) || '[]'); } catch (e) { return []; } };
+  const saveHist = h => { try { localStorage.setItem(HK, JSON.stringify(h)); } catch (e) {} };
+  const say = (id, t, cls) => { const e = $(id); e.textContent = t; e.className = 'msg ' + (cls || ''); };
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  async function copy(t) {
+    try { await navigator.clipboard.writeText(t); return true; } catch (e) {
+      const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select();
+      let ok = false; try { ok = document.execCommand('copy'); } catch (x) {} ta.remove(); return ok;
+    }
+  }
+  function download(name, text, type) {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: type || 'text/plain' })); a.download = name;
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+  function renderHist() {
+    const h = hist(), box = $('hist'); box.innerHTML = '';
+    if (!h.length) { box.innerHTML = '<div class="mut" style="padding:8px 0">Belum ada kunci.</div>'; return; }
+    h.slice().reverse().forEach(x => {
+      const d = document.createElement('div'); d.className = 'item';
+      d.innerHTML = '<label style="display:flex;gap:8px;align-items:flex-start;margin:0;color:var(--ink)"><input type="checkbox" style="width:auto;margin-top:4px" data-id="' + esc(x.id) + '"><span><b>' + esc(x.note || '(tanpa catatan)') + '</b><br><span class="mut">' + esc(x.text) + ' - dibuat ' + new Date(x.at).toLocaleString('id-ID') + ' - id ' + esc(x.id) + '</span></span></label><div class="key">' + esc(x.key) + '</div><button class="ghost small" type="button" data-k="' + esc(x.key) + '">Salin</button>';
+      box.appendChild(d);
+    });
+    box.querySelectorAll('button[data-k]').forEach(b => b.onclick = async () => { say('histmsg', (await copy(b.getAttribute('data-k'))) ? 'Kunci disalin.' : 'Gagal menyalin; blok manual.', 'good'); });
+  }
+  $('unlock').onclick = async () => {
+    const b = $('unlock'); b.disabled = true; say('lockmsg', 'Membuka...');
+    try {
+      PRIVJWK = await decryptPriv($('pass').value, ENC); PRIV = await importPriv(PRIVJWK);
+      if (PRIVJWK.x !== PUBJ.x || PRIVJWK.y !== PUBJ.y) throw new Error('mismatch');
+      $('lock').hidden = true; $('work').hidden = false; $('pass').value = ''; renderHist();
+    } catch (e) { say('lockmsg', 'Passphrase salah atau file rusak.', 'bad'); }
+    b.disabled = false;
+  };
+  $('pass').addEventListener('keydown', e => { if (e.key === 'Enter') $('unlock').click(); });
+  $('unit').onchange = () => { $('dur').disabled = $('unit').value === 'life'; };
+  $('gen').onclick = async () => {
+    const b = $('gen'); b.disabled = true; say('genmsg', 'Membuat...');
+    try {
+      const unit = $('unit').value, mode = document.querySelector('input[name=mode]:checked').value;
+      const qty = Math.max(1, Math.min(200, Number($('qty').value) || 1));
+      const p = plan(mode, $('dur').value, unit, Date.now() / 1000), now = Date.now(), note = $('note').value.trim();
+      const out = $('out'); out.innerHTML = ''; const made = []; const h = hist();
+      for (let i = 0; i < qty; i++) {
+        const k = await makeKey(PRIV, p.kind, p.val);
+        const rec = { key: k.key, id: k.id, text: p.text, note: note, at: now }; made.push(rec); h.push(rec);
+      }
+      saveHist(h); renderHist();
+      made.forEach(r => { const d = document.createElement('div'); d.className = 'item'; d.innerHTML = '<div class="mut">' + esc(r.text) + ' - id ' + esc(r.id) + '</div><div class="key">' + esc(r.key) + '</div>'; out.appendChild(d); });
+      const t = document.createElement('div'); t.className = 'tools';
+      t.innerHTML = '<button class="small" type="button" id="cpall">Salin semua</button>'; out.appendChild(t);
+      $('cpall').onclick = async () => say('genmsg', (await copy(made.map(r => r.key).join('\n'))) ? 'Semua kunci disalin.' : 'Gagal menyalin.', 'good');
+      say('genmsg', qty + ' kunci dibuat dan masuk riwayat.', 'good');
+    } catch (e) { say('genmsg', e.message || 'Gagal membuat kunci.', 'bad'); }
+    b.disabled = false;
+  };
+  $('csv').onclick = () => {
+    const q = s => '"' + String(s).replace(/"/g, '""') + '"';
+    const rows = [['dibuat', 'catatan', 'berlaku', 'id', 'kunci'].join(',')].concat(hist().map(x => [new Date(x.at).toISOString(), x.note, x.text, x.id, x.key].map(q).join(',')));
+    download('kunci-basuki.csv', rows.join('\n'), 'text/csv');
+  };
+  $('revoke').onclick = async () => {
+    const ids = Array.from(document.querySelectorAll('#hist input[type=checkbox]:checked')).map(c => c.getAttribute('data-id'));
+    if (!ids.length) return say('histmsg', 'Centang dulu kunci yang ingin dicabut.', 'bad');
+    const json = JSON.stringify({ revoked: ids }, null, 2);
+    say('histmsg', (await copy(json)) ? ids.length + ' ID kunci v11 disalin untuk arsip. Pemblokiran online dilakukan melalui dashboard lisensi.' : 'Gagal menyalin.', 'good');
+  };
+  $('clear').onclick = () => { if (confirm('Hapus seluruh riwayat di browser ini?')) { saveHist([]); renderHist(); } };
+  $('chpw').onclick = async () => {
+    const np = $('np').value; if (np.length < 10) return say('pwmsg', 'Passphrase baru minimal 10 karakter.', 'bad');
+    try {
+      const enc = await encryptPriv(np, PRIVJWK);
+      const c = document.documentElement.cloneNode(true);
+      c.querySelector('#out').innerHTML = ''; c.querySelector('#hist').innerHTML = ''; c.querySelector('#online-created').innerHTML = ''; c.querySelector('#online-licenses').innerHTML = ''; c.querySelector('#online-events').innerHTML = ''; c.querySelector('#work').setAttribute('hidden', ''); c.querySelector('#lock').removeAttribute('hidden');
+      c.querySelector('#enc').textContent = JSON.stringify(enc);
+      download('Basuki-License-Admin.html', '<!doctype html>\n' + c.outerHTML, 'text/html');
+      say('pwmsg', 'File baru diunduh. Uji dulu membukanya dengan passphrase baru.', 'good'); $('np').value = '';
+    } catch (e) { say('pwmsg', 'Gagal membuat file baru.', 'bad'); }
+  };
+})();
+</script>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/13.3.0/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from 'https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js';
+
+const OWNER_EMAIL = 'muhammadbasuki336@gmail.com';
+const $ = id => document.getElementById(id);
+const escapeHtml = value => String(value == null ? '' : value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+const dateText = value => value ? new Date(value).toLocaleString('id-ID') : 'Belum tersedia';
+const message = (id, text, good=false) => { const node=$(id); if(node){ node.textContent=text; node.className='msg '+(good?'good':'bad'); } };
+const setBusy = (button, busy, label) => { if(!button) return; button.disabled=busy; if(busy) button.dataset.oldLabel=button.textContent; button.textContent=busy?label:(button.dataset.oldLabel||label); };
+const copyText = async text => { try { await navigator.clipboard.writeText(text); return true; } catch { const el=document.createElement('textarea'); el.value=text; document.body.appendChild(el); el.select(); let ok=false; try{ok=document.execCommand('copy')}catch{} el.remove(); return ok; } };
+let auth=null, activeUser=null, isOwner=false, onlineData={licenses:[],events:[]};
+
+function showAuthError(error) {
+  const code = error && error.code || '';
+  const map = {
+    'auth/unauthorized-domain':'Domain website belum ditambahkan ke Firebase Authentication > Authorized domains.',
+    'auth/operation-not-allowed':'Aktifkan penyedia Google di Firebase Authentication.',
+    'auth/popup-blocked':'Login Google diblokir browser. Coba lagi atau izinkan pengalihan.',
+    'functions/permission-denied':'Akun ini tidak punya izin untuk tindakan tersebut.',
+    'functions/unauthenticated':'Sesi Google berakhir. Masuk kembali.'
+  };
+  return map[code] || (error && error.message) || 'Terjadi kesalahan. Periksa konfigurasi Firebase.';
+}
+
+async function serverCall(name, data={}) {
+  if(!activeUser) throw new Error('Masuk dengan Google terlebih dahulu.');
+  try {
+    const idToken=await activeUser.getIdToken();
+    const response=await fetch('/api/license',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${idToken}`},
+      body:JSON.stringify({action:name,data})
+    });
+    const result=await response.json().catch(()=>({}));
+    if(!response.ok || result.ok===false) throw new Error(result.message||`Permintaan gagal (${response.status}).`);
+    return result;
+  } catch(error) { throw new Error(showAuthError(error)); }
+}
+
+function toggle(el, visible) { if(el) el.hidden=!visible; }
+function keyCard(key, title, subtitle) {
+  return `<div class="online-result"><b>${escapeHtml(title)}</b><div class="mut">${escapeHtml(subtitle)}</div><div class="online-key">${escapeHtml(key)}</div><div class="tools"><button class="ghost small" type="button" data-copy="${escapeHtml(key)}">Salin kunci</button></div></div>`;
+}
+document.addEventListener('click', async event=>{
+  const button=event.target.closest('[data-copy]');
+  if(!button) return;
+  const ok=await copyText(button.getAttribute('data-copy'));
+  button.textContent=ok?'Tersalin':'Salin manual';
+});
+
+// Firebase Web App config diambil otomatis dari Environment Variables Vercel.
+let firebaseConfig = null;
+try {
+  const configResponse = await fetch('/api/config', { cache: 'no-store' });
+  const configPayload = await configResponse.json().catch(() => ({}));
+  if (!configResponse.ok) throw new Error(configPayload.message || 'Konfigurasi Firebase belum diisi di Vercel.');
+  firebaseConfig = configPayload;
+} catch (configError) {
+  message('auth-msg', configError.message || 'Gagal memuat konfigurasi Firebase dari Vercel.');
+  $('google-login').disabled = true;
+}
+
+if (!firebaseConfig || !firebaseConfig.apiKey || !firebaseConfig.projectId || !firebaseConfig.appId) {
+  message('auth-msg','Konfigurasi Firebase belum lengkap. Atur FIREBASE_PROJECT_ID, FIREBASE_WEB_API_KEY, dan FIREBASE_APP_ID di Vercel.');
+  $('google-login').disabled=true;
+} else {
+  try {
+    const app=initializeApp(firebaseConfig);
+    auth=getAuth(app);
+    await setPersistence(auth,browserLocalPersistence);
+    try { await getRedirectResult(auth); } catch(error) { message('auth-msg',showAuthError(error)); }
+
+    $('google-login').addEventListener('click',async()=>{
+      const button=$('google-login'); setBusy(button,true,'Membuka Google...');
+      try { const provider=new GoogleAuthProvider(); provider.setCustomParameters({prompt:'select_account'}); await signInWithRedirect(auth,provider); }
+      catch(error){ message('auth-msg',showAuthError(error)); button.disabled=false; button.textContent='Masuk dengan Google'; }
+    });
+    $('google-logout').addEventListener('click',async()=>{ try{ await signOut(auth); }catch(error){message('auth-msg',showAuthError(error));} });
+
+    onAuthStateChanged(auth,async user=>{
+      activeUser=user;
+      const signed=!!user;
+      toggle($('google-login'),!signed);
+      toggle($('google-logout'),signed);
+      $('auth-account').textContent=signed?`Masuk sebagai ${user.email || 'akun Google'}`:'';
+      $('auth-intro').textContent=signed?'Akun Google sudah terhubung. Kembali ke aplikasi setelah trial/kunci pembelian dihubungkan.':'Masuk dengan Google. Owner dapat membuka dashboard; pengguna dapat mengambil trial 7 hari atau menghubungkan kunci pembelian.';
+      toggle($('user-panel'),signed && (user.email||'').toLowerCase()!==OWNER_EMAIL);
+      toggle($('owner-wrap'),signed && (user.email||'').toLowerCase()===OWNER_EMAIL);
+      isOwner=signed && (user.email||'').toLowerCase()===OWNER_EMAIL;
+      if(!signed){ toggle($('lock'),false); toggle($('work'),false); return; }
+      if(isOwner){
+        message('auth-msg','Akun Owner terverifikasi. Buka alat admin dengan passphrase lama.',true);
+        $('lock').hidden=false; $('work').hidden=true;
+      } else {
+        message('auth-msg','Login pengguna berhasil. Fitur admin tidak tersedia untuk akun ini.',true);
+        await loadMyLicenses();
+      }
+    });
+  } catch(error) {
+    message('auth-msg',showAuthError(error));
+    $('google-login').disabled=true;
+  }
+}
+
+// Public user functions use the SAME website address as the Owner dashboard.
+$('trial-create').addEventListener('click',async()=>{
+  const button=$('trial-create'); setBusy(button,true,'Membuat trial...');
+  try{
+    const result=await serverCall('startTrial');
+    $('trial-result').innerHTML=keyCard(result.key,'Kunci trial berhasil dibuat',`Berlaku 7 hari • Berakhir ${dateText(result.expiresAtMs)} • Batas 1 perangkat`);
+    message('trial-msg','Trial dibuat. Salin kunci lalu masukkan ke aplikasi Basuki Music.',true);
+    await loadMyLicenses();
+  }catch(error){message('trial-msg',error.message);}
+  finally{button.disabled=false;button.textContent='Ambil trial 7 hari';}
+});
+$('claim-submit').addEventListener('click',async()=>{
+  const button=$('claim-submit'); setBusy(button,true,'Menghubungkan...');
+  try{
+    const key=$('claim-key').value.trim();
+    if(!key) throw new Error('Masukkan kunci lisensi.');
+    await serverCall('claimLicense',{key});
+    $('claim-key').value='';
+    message('claim-msg','Kunci berhasil dihubungkan ke akun Google ini. Masukkan kunci yang sama ke aplikasi.',true);
+    await loadMyLicenses();
+  }catch(error){message('claim-msg',error.message);}
+  finally{button.disabled=false;button.textContent='Hubungkan kunci';}
+});
+$('my-refresh').addEventListener('click',loadMyLicenses);
+async function loadMyLicenses(){
+  if(!activeUser || isOwner) return;
+  $('my-licenses').textContent='Memuat lisensi...';
+  try{
+    const result=await serverCall('getMyLicenses');
+    if(!result.licenses.length){$('my-licenses').textContent='Belum ada lisensi pada akun ini.';return;}
+    $('my-licenses').innerHTML=result.licenses.map(item=>{
+      const expired=!item.isPermanent && item.expiresAtMs && item.expiresAtMs<=Date.now();
+      const keyBlock=item.key?`<div class="online-key">${escapeHtml(item.key)}</div><div class="tools"><button class="ghost small" type="button" data-copy="${escapeHtml(item.key)}">Salin kunci</button></div>`:'';
+      return `<div class="item"><b>${escapeHtml(item.kind==='trial'?'Trial 7 hari':item.isPermanent?'Lisensi permanen':'Lisensi Basuki Music')}</b><div class="mut">Email: ${escapeHtml(item.email||'—')}<br>Berlaku: ${item.isPermanent?'Permanen':dateText(item.expiresAtMs)}<br>Batas perangkat: ${Number(item.deviceLimit)||1}</div><span class="badge ${item.revoked||expired?'bad':'good'}">${item.revoked?'Diblokir':expired?'Kedaluwarsa':'Terdaftar'}</span>${keyBlock}</div>`;
+    }).join('');
+  }catch(error){$('my-licenses').textContent=error.message;}
+}
+
+// Owner dashboard: backend verifies the Google email on every callable function.
+$('unlock').addEventListener('click',()=>setTimeout(()=>{ if(isOwner && !$('work').hidden) loadOnlineAdmin(); },100));
+$('online-refresh').addEventListener('click',loadOnlineAdmin);
+$('online-permanent').addEventListener('change',()=>{
+  const permanent=$('online-permanent').checked;
+  $('online-days').disabled=permanent;
+  $('online-qty').disabled=permanent;
+  if(permanent){$('online-email').value=OWNER_EMAIL;$('online-qty').value='1';$('online-limit').value='1';}
+});
+$('online-create').addEventListener('click',async()=>{
+  const button=$('online-create'); setBusy(button,true,'Membuat...'); $('online-created').innerHTML='';
+  try{
+    const data=await serverCall('createLicense',{
+      email:$('online-email').value.trim(), note:$('online-note').value.trim(),
+      days:Number($('online-days').value), quantity:Number($('online-qty').value),
+      deviceLimit:Number($('online-limit').value), permanent:$('online-permanent').checked
+    });
+    $('online-created').innerHTML=data.licenses.map((item,index)=>keyCard(item.key,`Kunci ${index+1} dibuat`,`${item.isPermanent?'Owner permanen':item.days+' hari'} • ${item.deviceLimit} perangkat • ${item.email||'Email diklaim pengguna pertama'}`)).join('');
+    message('online-create-msg',`${data.licenses.length} kunci berhasil dibuat. Salin dan simpan kunci sekarang; server hanya menyimpan hash.`,true);
+    $('online-note').value='';
+    await loadOnlineAdmin();
+  }catch(error){message('online-create-msg',error.message);}
+  finally{button.disabled=false;button.textContent='Buat kunci online';}
+});
+
+function eventName(value){return ({created:'Kunci dibuat',trial_created:'Trial dibuat',claimed:'Kunci dihubungkan',device_activated:'Perangkat diaktifkan',device_replaced:'Perangkat lama digantikan',license_blocked:'Lisensi diblokir',license_unblocked:'Lisensi dibuka',device_blocked:'Perangkat diblokir',device_unblocked:'Perangkat dibuka',device_limit_changed:'Batas perangkat diubah',license_extended:'Masa lisensi diperpanjang'})[value]||value;}
+async function loadOnlineAdmin(){
+  if(!activeUser||!isOwner||$('work').hidden)return;
+  $('online-licenses').textContent='Memuat daftar lisensi...';
+  try{
+    onlineData=await serverCall('adminListLicenses');
+    const licenses=onlineData.licenses||[], events=onlineData.events||[];
+    const activeDevices=licenses.reduce((sum,item)=>sum+(item.devices||[]).filter(d=>d.status==='active').length,0);
+    const blocked=licenses.filter(item=>item.revoked).length;
+    $('online-stats').innerHTML=`<div class="key"><b>${licenses.length}</b><br><span class="mut">Lisensi terbaru</span></div><div class="key"><b>${activeDevices}</b><br><span class="mut">Perangkat aktif</span></div><div class="key"><b>${blocked}</b><br><span class="mut">Lisensi diblokir</span></div>`;
+    if(!licenses.length){$('online-licenses').innerHTML='<div class="mut">Belum ada kunci online.</div>';}
+    else $('online-licenses').innerHTML=licenses.map(item=>{
+      const expired=!item.isPermanent && item.expiresAtMs && item.expiresAtMs<=Date.now();
+      const usable=!item.revoked&&!expired;
+      const devices=(item.devices||[]).map(device=>{
+        const active=device.status==='active';
+        return `<div class="online-device"><div><b>${escapeHtml(device.model||'Perangkat Android')}</b><div class="online-meta">${escapeHtml(device.androidVersion||'Versi Android tidak diketahui')}<br>Pertama aktif: ${dateText(device.firstLoginMs)}<br>Terakhir digunakan: ${dateText(device.lastUseMs)}<br>ID instalasi tersamarkan: ${escapeHtml(String(device.deviceId||'').slice(0,14))}…<br>Status: ${escapeHtml(device.status)}</div></div><div class="online-actions"><button class="${active?'danger':'ghost'} small" data-action="device" data-doc="${escapeHtml(item.docId)}" data-device="${escapeHtml(device.deviceId)}" data-block="${active?'1':'0'}">${active?'Blokir perangkat':'Buka perangkat'}</button></div></div>`;
+      }).join('')||'<div class="mut">Belum ada perangkat yang mengaktifkan kunci ini.</div>';
+      const keyPanel = item.key
+        ? `<div class="mut" style="margin-top:10px;font-weight:700">Kunci lengkap (tersimpan terenkripsi)</div><div class="online-key">${escapeHtml(item.key)}</div><div class="tools"><button class="ghost small" type="button" data-copy="${escapeHtml(item.key)}">Salin kunci</button></div>`
+        : `<div class="mut" style="margin-top:10px">Kunci v11 lama tidak disimpan sebagai teks di server. Lihat riwayat kunci lama pada bagian pembuat kunci di bawah.</div>`;
+      return `<div class="online-license"><div class="online-head"><div><b>${escapeHtml(item.email||'Belum diklaim email Google')}</b><div class="online-meta">Jenis: ${escapeHtml(item.kind)}<br>Catatan: ${escapeHtml(item.note||'—')}<br>Awalan kunci: ${escapeHtml(item.keyPrefix||'BSK')} • Akhiran: ${escapeHtml(item.keySuffix||'—')}<br>Dibuat: ${dateText(item.createdAtMs)}<br>Berakhir: ${item.isPermanent?'Permanen':dateText(item.expiresAtMs)}<br>ID lisensi: ${escapeHtml(item.licenseId||'—')}</div></div><div><span class="${usable?'good':'bad'}">${usable?'Aktif':item.revoked?'Diblokir':'Kedaluwarsa'}</span><div class="mut">Perangkat aktif: ${Number(item.activeDeviceCount)||0}/${Number(item.deviceLimit)||1}</div></div></div>${keyPanel}<div class="row" style="margin-top:8px"><div><label>Batas perangkat</label><input type="number" min="1" max="50" class="limit-input" value="${Number(item.deviceLimit)||1}" style="max-width:100px"></div><div class="tools"><button class="ghost small" data-action="limit" data-doc="${escapeHtml(item.docId)}">Simpan batas</button><button class="${item.revoked?'ghost':'danger'} small" data-action="revoke" data-doc="${escapeHtml(item.docId)}" data-revoked="${item.revoked?'1':'0'}">${item.revoked?'Buka blokir lisensi':'Blokir lisensi'}</button></div></div><div class="row" style="margin-top:4px"><div><label>Tambah masa berlaku (hari)</label><input type="number" min="1" max="365" class="extend-input" value="30" style="max-width:100px" ${item.isPermanent?'disabled':''}></div><div class="tools"><button class="ghost small" data-action="extend" data-doc="${escapeHtml(item.docId)}" ${item.isPermanent?'disabled':''}>Perpanjang</button></div></div><div class="mut" style="font-weight:700;margin-top:12px">Perangkat</div>${devices}</div>`;
+    }).join('');
+    $('online-events').innerHTML=events.length?events.map(item=>`<div class="item"><b>${escapeHtml(eventName(item.event))}</b><div class="mut">${escapeHtml(item.email||item.deviceModel||'')} • ${dateText(item.atMs)}<br>${escapeHtml(item.detail||'')}</div></div>`).join(''):'<div class="mut">Belum ada aktivitas.</div>';
+  }catch(error){$('online-licenses').textContent=error.message;}
+}
+$('online-licenses').addEventListener('click',async event=>{
+  const button=event.target.closest('button[data-action]'); if(!button)return;
+  const action=button.dataset.action, doc=button.dataset.doc; button.disabled=true;
+  try{
+    if(action==='revoke') await serverCall('updateLicense',{licenseDocId:doc,revoked:button.dataset.revoked!=='1'});
+    if(action==='limit'){
+      const limit=Number(button.closest('.online-license').querySelector('.limit-input').value);
+      await serverCall('updateLicense',{licenseDocId:doc,deviceLimit:limit});
+    }
+    if(action==='device') await serverCall('updateDevice',{licenseDocId:doc,deviceId:button.dataset.device,blocked:button.dataset.block==='1'});
+    if(action==='extend'){ const days=Number(button.closest('.online-license').querySelector('.extend-input').value); await serverCall('extendLicense',{licenseDocId:doc,addDays:days}); }
+    await loadOnlineAdmin();
+  }catch(error){alert(error.message||'Perubahan gagal disimpan.');button.disabled=false;}
+});
+$('online-csv').addEventListener('click',()=>{
+  const q=value=>'"'+String(value??'').replace(/"/g,'""')+'"';
+  const rows=[['license_id','email','kind','note','created','expires','permanent','revoked','active_devices','device_limit','key_prefix','key_suffix'].join(',')];
+  for(const item of onlineData.licenses||[]) rows.push([item.licenseId,item.email,item.kind,item.note,dateText(item.createdAtMs),item.isPermanent?'':dateText(item.expiresAtMs),item.isPermanent,item.revoked,item.activeDeviceCount,item.deviceLimit,item.keyPrefix,item.keySuffix].map(q).join(','));
+  const blob=new Blob([rows.join('\n')],{type:'text/csv;charset=utf-8'}); const url=URL.createObjectURL(blob); const a=document.createElement('a');a.href=url;a.download='basuki-lisensi-online.csv';a.click();URL.revokeObjectURL(url);
+});
+</script>
+
+</body>
+</html>
