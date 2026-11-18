@@ -33,9 +33,11 @@ module.exports = async function handler(req, res) {
     const credentialChecks = service.serviceAccountDiagnostics();
     stage = 'firebase-admin-init';
     service.initializeFirebase();
+    stage = 'google-oauth-token';
+    const oauth = await service.testGoogleOAuth();
     stage = 'firestore-read';
     const probe = await service.backendHealth();
-    return res.status(200).json({ ...probe, configured, credentialChecks, stage: 'ready' });
+    return res.status(200).json({ ...probe, oauth, configured, credentialChecks, stage: 'ready' });
   } catch (error) {
     console.error('[api/health]', {
       stage,
