@@ -26,6 +26,10 @@ module.exports = async function handler(req, res) {
     const service = require('../lib/license-service.cjs');
     stage = 'firebase-admin-init';
     service.initializeFirebase();
+    // Test service-account authentication before running a trial/license action.
+    // This separates Google OAuth failures from Firestore or business-logic failures.
+    stage = 'google-oauth-token';
+    await service.testGoogleOAuth();
     stage = 'verify-google-token';
     const header = String(req.headers.authorization || '');
     const match = header.match(/^Bearer\s+(.+)$/i);
