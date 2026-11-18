@@ -302,7 +302,7 @@ async function makeKey(priv, kind, val, ver) {
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/13.3.0/firebase-app.js';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from 'https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from 'https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js';
 
 const OWNER_EMAIL = 'muhammadbasuki336@gmail.com';
 const $ = id => document.getElementById(id);
@@ -318,13 +318,14 @@ function showAuthError(error) {
   const map = {
     'auth/unauthorized-domain':'Domain Vercel belum ditambahkan ke Firebase Authentication > Settings > Authorized domains.',
     'auth/operation-not-allowed':'Metode login Google belum aktif di Firebase Authentication > Sign-in method.',
-    'auth/popup-blocked':'Browser memblokir jendela login Google. Izinkan pop-up lalu coba lagi.',
+    'auth/popup-blocked':'Browser memblokir jendela login Google. Izinkan pop-up untuk situs ini lalu coba lagi.',
     'auth/popup-closed-by-user':'Jendela login ditutup sebelum proses selesai. Tekan tombol masuk untuk mencoba lagi.',
-    'auth/popup-blocked':'Browser memblokir jendela login Google. Izinkan pop-up atau coba login melalui pengalihan.',
     'auth/cancelled-popup-request':'Proses login sebelumnya belum selesai. Tunggu sebentar lalu coba lagi.',
     'auth/operation-not-supported-in-this-environment':'Browser ini tidak mendukung jendela login. Coba gunakan Chrome atau browser utama.',
     'auth/web-storage-unsupported':'Penyimpanan sesi browser tidak tersedia. Aktifkan penyimpanan situs untuk domain ini.',
     'auth/network-request-failed':'Koneksi ke Firebase gagal. Periksa internet lalu coba lagi.',
+    'auth/invalid-credential':'Login Google gagal diverifikasi. Periksa konfigurasi OAuth Firebase.',
+    'auth/unauthorized-domain':'Domain Vercel belum diizinkan di Firebase Authentication > Settings > Authorized domains.',
     'auth/invalid-api-key':'FIREBASE_WEB_API_KEY tidak cocok dengan Firebase project.',
     'auth/redirect-cancelled-by-user':'Proses pengalihan login dibatalkan.',
     'auth/redirect-operation-pending':'Masih ada proses login Google yang belum selesai. Muat ulang halaman.',
@@ -381,16 +382,6 @@ if (!firebaseConfig || !firebaseConfig.apiKey || !firebaseConfig.projectId || !f
     const app=initializeApp(firebaseConfig);
     auth=getAuth(app);
     await setPersistence(auth,browserLocalPersistence);
-    let redirectAuthError = null;
-    try {
-      const redirectCredential = await getRedirectResult(auth);
-      if (redirectCredential && redirectCredential.user) {
-        message('auth-msg', `Login Google berhasil: ${redirectCredential.user.email || 'akun terhubung'}.`, true);
-      }
-    } catch(error) {
-      redirectAuthError = error;
-      message('auth-msg',showAuthError(error));
-    }
 
     $('google-login').addEventListener('click',async()=>{
       const button=$('google-login');
@@ -404,21 +395,6 @@ if (!firebaseConfig || !firebaseConfig.apiKey || !firebaseConfig.projectId || !f
         activeUser = credential.user;
         message('auth-msg',`Login berhasil sebagai ${credential.user.email || 'akun Google'}.`,true);
       } catch(error) {
-        const code = error && error.code || '';
-        const canFallback = [
-          'auth/popup-blocked',
-          'auth/operation-not-supported-in-this-environment',
-          'auth/cancelled-popup-request'
-        ].includes(code);
-        if (canFallback) {
-          try {
-            message('auth-msg','Membuka metode login alternatif...',true);
-            await signInWithRedirect(auth,provider);
-            return;
-          } catch(redirectError) {
-            error = redirectError;
-          }
-        }
         message('auth-msg',showAuthError(error));
         button.disabled=false;
         button.textContent='Masuk dengan Google';
@@ -439,8 +415,7 @@ if (!firebaseConfig || !firebaseConfig.apiKey || !firebaseConfig.projectId || !f
       if(!signed){
         toggle($('lock'),false);
         toggle($('work'),false);
-        if (redirectAuthError) message('auth-msg',showAuthError(redirectAuthError));
-        else message('auth-msg','Belum ada sesi Google yang aktif. Jika kamu baru saja memilih akun Google tetapi kembali ke halaman ini, login belum tersimpan. Periksa domain Vercel pada Authorized domains dan OAuth redirect URI.',false);
+        message('auth-msg','Silakan masuk dengan Google untuk melanjutkan.',false);
         return;
       }
       if(isOwner){
