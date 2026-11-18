@@ -32,13 +32,13 @@
 </style>
 </head>
 <body>
-<h1>Pembuat Kunci Lisensi</h1>
-<div class="mut">Basuki Music - jangan bagikan file ini kepada siapa pun.</div>
+<h1>Portal Lisensi Basuki Music</h1>
+<div class="mut">Masuk untuk mengaktifkan trial atau menghubungkan kunci lisensi Basuki Music.</div>
 
 
 <div class="card" id="auth-card">
   <h2>Akun Google</h2>
-  <div class="mut" id="auth-intro">Masuk dengan Google. Akun Owner dapat membuka pembuat kunci dan pengelolaan perangkat; pengguna dapat mengambil trial 7 hari atau menghubungkan kunci pembelian dari halaman yang sama.</div>
+  <div class="mut" id="auth-intro">Masuk dengan Google untuk mengambil trial 7 hari atau menghubungkan kunci lisensi yang sudah dibeli.</div>
   <div class="tools"><button id="google-login" type="button">Masuk dengan Google</button><button class="ghost" id="google-logout" type="button" hidden>Keluar</button></div>
   <div class="msg" id="auth-msg"></div>
   <div class="mut" id="auth-account"></div>
@@ -302,7 +302,7 @@ async function makeKey(priv, kind, val, ver) {
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/13.3.0/firebase-app.js';
-import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from 'https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from 'https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js';
 
 const OWNER_EMAIL = 'muhammadbasuki336@gmail.com';
 const $ = id => document.getElementById(id);
@@ -316,13 +316,23 @@ let auth=null, activeUser=null, isOwner=false, onlineData={licenses:[],events:[]
 function showAuthError(error) {
   const code = error && error.code || '';
   const map = {
-    'auth/unauthorized-domain':'Domain website belum ditambahkan ke Firebase Authentication > Authorized domains.',
-    'auth/operation-not-allowed':'Aktifkan penyedia Google di Firebase Authentication.',
-    'auth/popup-blocked':'Login Google diblokir browser. Coba lagi atau izinkan pengalihan.',
+    'auth/unauthorized-domain':'Domain Vercel belum ditambahkan ke Firebase Authentication > Settings > Authorized domains.',
+    'auth/operation-not-allowed':'Metode login Google belum aktif di Firebase Authentication > Sign-in method.',
+    'auth/popup-blocked':'Browser memblokir jendela login Google. Izinkan pop-up lalu coba lagi.',
+    'auth/popup-closed-by-user':'Jendela login ditutup sebelum proses selesai. Tekan tombol masuk untuk mencoba lagi.',
+    'auth/popup-blocked':'Browser memblokir jendela login Google. Izinkan pop-up atau coba login melalui pengalihan.',
+    'auth/cancelled-popup-request':'Proses login sebelumnya belum selesai. Tunggu sebentar lalu coba lagi.',
+    'auth/operation-not-supported-in-this-environment':'Browser ini tidak mendukung jendela login. Coba gunakan Chrome atau browser utama.',
+    'auth/web-storage-unsupported':'Penyimpanan sesi browser tidak tersedia. Aktifkan penyimpanan situs untuk domain ini.',
+    'auth/network-request-failed':'Koneksi ke Firebase gagal. Periksa internet lalu coba lagi.',
+    'auth/invalid-api-key':'FIREBASE_WEB_API_KEY tidak cocok dengan Firebase project.',
+    'auth/redirect-cancelled-by-user':'Proses pengalihan login dibatalkan.',
+    'auth/redirect-operation-pending':'Masih ada proses login Google yang belum selesai. Muat ulang halaman.',
     'functions/permission-denied':'Akun ini tidak punya izin untuk tindakan tersebut.',
     'functions/unauthenticated':'Sesi Google berakhir. Masuk kembali.'
   };
-  return map[code] || (error && error.message) || 'Terjadi kesalahan. Periksa konfigurasi Firebase.';
+  const detail = map[code] || (error && error.message) || 'Terjadi kesalahan. Periksa konfigurasi Firebase.';
+  return code ? `${detail} (Kode: ${code})` : detail;
 }
 
 async function serverCall(name, data={}) {
@@ -371,12 +381,48 @@ if (!firebaseConfig || !firebaseConfig.apiKey || !firebaseConfig.projectId || !f
     const app=initializeApp(firebaseConfig);
     auth=getAuth(app);
     await setPersistence(auth,browserLocalPersistence);
-    try { await getRedirectResult(auth); } catch(error) { message('auth-msg',showAuthError(error)); }
+    let redirectAuthError = null;
+    try {
+      const redirectCredential = await getRedirectResult(auth);
+      if (redirectCredential && redirectCredential.user) {
+        message('auth-msg', `Login Google berhasil: ${redirectCredential.user.email || 'akun terhubung'}.`, true);
+      }
+    } catch(error) {
+      redirectAuthError = error;
+      message('auth-msg',showAuthError(error));
+    }
 
     $('google-login').addEventListener('click',async()=>{
-      const button=$('google-login'); setBusy(button,true,'Membuka Google...');
-      try { const provider=new GoogleAuthProvider(); provider.setCustomParameters({prompt:'select_account'}); await signInWithRedirect(auth,provider); }
-      catch(error){ message('auth-msg',showAuthError(error)); button.disabled=false; button.textContent='Masuk dengan Google'; }
+      const button=$('google-login');
+      setBusy(button,true,'Menghubungkan Google...');
+      const provider=new GoogleAuthProvider();
+      provider.setCustomParameters({prompt:'select_account'});
+      try {
+        // Coba popup terlebih dahulu. Ini menghindari hilangnya sesi saat Chrome
+        // Android kembali dari halaman OAuth redirect.
+        const credential = await signInWithPopup(auth, provider);
+        activeUser = credential.user;
+        message('auth-msg',`Login berhasil sebagai ${credential.user.email || 'akun Google'}.`,true);
+      } catch(error) {
+        const code = error && error.code || '';
+        const canFallback = [
+          'auth/popup-blocked',
+          'auth/operation-not-supported-in-this-environment',
+          'auth/cancelled-popup-request'
+        ].includes(code);
+        if (canFallback) {
+          try {
+            message('auth-msg','Membuka metode login alternatif...',true);
+            await signInWithRedirect(auth,provider);
+            return;
+          } catch(redirectError) {
+            error = redirectError;
+          }
+        }
+        message('auth-msg',showAuthError(error));
+        button.disabled=false;
+        button.textContent='Masuk dengan Google';
+      }
     });
     $('google-logout').addEventListener('click',async()=>{ try{ await signOut(auth); }catch(error){message('auth-msg',showAuthError(error));} });
 
@@ -386,11 +432,17 @@ if (!firebaseConfig || !firebaseConfig.apiKey || !firebaseConfig.projectId || !f
       toggle($('google-login'),!signed);
       toggle($('google-logout'),signed);
       $('auth-account').textContent=signed?`Masuk sebagai ${user.email || 'akun Google'}`:'';
-      $('auth-intro').textContent=signed?'Akun Google sudah terhubung. Kembali ke aplikasi setelah trial/kunci pembelian dihubungkan.':'Masuk dengan Google. Owner dapat membuka dashboard; pengguna dapat mengambil trial 7 hari atau menghubungkan kunci pembelian.';
+      $('auth-intro').textContent=signed?'Akun Google sudah terhubung. Lanjutkan pengelolaan lisensi di bawah ini.':'Masuk dengan Google untuk mengambil trial 7 hari atau menghubungkan kunci lisensi yang sudah dibeli.';
       toggle($('user-panel'),signed && (user.email||'').toLowerCase()!==OWNER_EMAIL);
       toggle($('owner-wrap'),signed && (user.email||'').toLowerCase()===OWNER_EMAIL);
       isOwner=signed && (user.email||'').toLowerCase()===OWNER_EMAIL;
-      if(!signed){ toggle($('lock'),false); toggle($('work'),false); return; }
+      if(!signed){
+        toggle($('lock'),false);
+        toggle($('work'),false);
+        if (redirectAuthError) message('auth-msg',showAuthError(redirectAuthError));
+        else message('auth-msg','Belum ada sesi Google yang aktif. Jika kamu baru saja memilih akun Google tetapi kembali ke halaman ini, login belum tersimpan. Periksa domain Vercel pada Authorized domains dan OAuth redirect URI.',false);
+        return;
+      }
       if(isOwner){
         message('auth-msg','Akun Owner terverifikasi. Buka alat admin dengan passphrase lama.',true);
         $('lock').hidden=false; $('work').hidden=true;
