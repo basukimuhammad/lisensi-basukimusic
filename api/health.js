@@ -8,7 +8,8 @@ module.exports = function handler(req, res) {
       firebaseProject: !!process.env.FIREBASE_PROJECT_ID,
       webAuth: !!(process.env.FIREBASE_WEB_API_KEY && process.env.FIREBASE_APP_ID),
       serviceAccount: !!process.env.FIREBASE_SERVICE_ACCOUNT_JSON,
-      licenseEncryption: !!process.env.LICENSE_KEY_ENCRYPTION_SECRET
+      licenseEncryption: !!process.env.LICENSE_KEY_ENCRYPTION_SECRET,
+      firebaseAuthProxy: true
     }
   });
 };
