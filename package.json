@@ -1,6 +1,6 @@
 {
   "name": "basuki-music-license-vercel",
-  "version": "1.0.0",
+  "version": "1.7.0",
   "private": true,
   "engines": {
     "node": "22.x"
@@ -9,6 +9,9 @@
     "check": "node --check api/license.js && node --check api/license-device.js && node --check api/config.js && node --check api/health.js && node --check lib/license-service.cjs && node --check api/ping.js"
   },
   "dependencies": {
-    "firebase-admin": "14.5.1"
+    "firebase-admin": "13.6.0"
+  },
+  "overrides": {
+    "jwks-rsa": "3.2.2"
   }
 }
