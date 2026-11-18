@@ -1,6 +1,4 @@
 'use strict';
-const service = require('../lib/license-service.cjs');
-
 const STATUS = {
   'unauthenticated': 401,
   'permission-denied': 403,
@@ -24,6 +22,8 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ ok: false, message: 'Gunakan POST.' });
 
   try {
+    stage = 'load-license-service';
+    const service = require('../lib/license-service.cjs');
     stage = 'firebase-admin-init';
     service.initializeFirebase();
     stage = 'verify-google-token';
