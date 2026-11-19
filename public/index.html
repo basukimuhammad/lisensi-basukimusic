@@ -29,7 +29,7 @@
   input,select,textarea{font:inherit}
   a{color:var(--p2)}
 
-  /* --- TOPBAR BARU --- */
+  /* Topbar */
   .topbar{
     position:sticky;top:0;z-index:50;
     display:flex;align-items:center;justify-content:space-between;gap:16px;
@@ -57,12 +57,10 @@
   }
   .avatar img{width:100%;height:100%;object-fit:cover}
   .user-email{
-    display:none; /* Sembunyikan email di HP */
+    display:none;
     font-size:12px;font-weight:500;color:var(--mut);
     max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   }
-  
-  /* Tampilkan email jika layar >= 600px (Tablet/PC) */
   @media (min-width:600px) {
     .user-email { display:block; }
     .brand-text h1 { font-size:17px; }
@@ -145,7 +143,8 @@
     background:#0b1120;color:var(--ink);outline:none;transition:border-color .15s, box-shadow .15s;
   }
   input:focus,select:focus,textarea:focus{border-color:var(--p1);box-shadow:0 0 0 3px rgba(124,108,255,.15)}
-  input[type=checkbox]{width:auto;accent-color:var(--p1)}
+  input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--p1)}
+  textarea{resize:vertical;min-height:100px;font-family:monospace}
 
   /* License Grid */
   .license-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
@@ -226,7 +225,6 @@
 
 <header class="topbar">
   <div class="brand">
-    <!-- SVG Logo baru sesuai gambar -->
     <div class="logo">
       <svg viewBox="0 0 100 100" width="100%" height="100%">
         <defs>
@@ -239,9 +237,7 @@
             <stop offset="100%" stop-color="#38bdf8" />
           </linearGradient>
         </defs>
-        <!-- Huruf B -->
         <path d="M 32 20 L 62 20 C 74 20 82 28 82 40 C 82 48 76 54 68 56 C 78 58 84 65 84 76 C 84 90 74 96 60 96 L 32 96 Z M 48 34 L 48 50 L 60 50 C 66 50 68 46 68 42 C 68 38 66 34 60 34 Z M 48 64 L 48 82 L 62 82 C 68 82 70 78 70 73 C 70 68 68 64 62 64 Z" fill="url(#b-grad)" />
-        <!-- Not Balok -->
         <path d="M 65 28 L 65 65 C 65 75 52 78 52 68 C 52 60 60 58 65 55 L 65 38 L 80 34 L 80 55 C 80 65 67 68 67 58 C 67 50 75 48 80 45 L 80 28 Z" fill="#ffffff" />
       </svg>
     </div>
@@ -321,7 +317,7 @@
   </div>
 
   <div id="work" hidden>
-    <!-- Panduan Sistem (Info Panel) -->
+    <!-- Panduan Sistem -->
     <div class="info-panel">
       <h3>ℹ️ Panduan Sistem Lisensi</h3>
       <p>Web ini memiliki dua jenis lisensi. Jangan bingung jika melihat ada format kunci yang berbeda:</p>
@@ -378,23 +374,46 @@
     <!-- CREATE LICENSE -->
     <div class="panel" data-panel="create">
       <div class="card">
-        <h2>Buat kunci v11 baru (online)</h2>
-        <div class="hint">Kunci dibuat <b>di browser</b> dengan private key v11 Anda, lalu <b>didaftarkan ke server</b> untuk manajemen perangkat, email, dan pemblokiran. Format kunci sama seperti APK v11 lama (BSK-XXXXXX-…).</div>
-        <div class="form-grid mt">
-          <div><label for="online-email">Email pembeli (opsional)</label><input id="online-email" type="email" placeholder="pembeli@gmail.com"></div>
+        <h2>Buat / Daftarkan Kunci v11</h2>
+        <div class="hint">Pilih untuk membuat kunci baru secara otomatis, atau mendaftarkan kunci yang sudah ada (dibuat offline) agar bisa dipantau di dashboard dan terhubung ke email pembeli.</div>
+        
+        <div class="row mt-sm" style="margin-bottom:14px; gap:14px;">
+          <label style="display:flex; align-items:center; gap:6px; margin:0; text-transform:none; letter-spacing:0; font-weight:400; color:var(--ink); font-size:14px; cursor:pointer;">
+            <input type="radio" name="create-mode" value="auto" checked> Generate Kunci Baru (Otomatis)
+          </label>
+          <label style="display:flex; align-items:center; gap:6px; margin:0; text-transform:none; letter-spacing:0; font-weight:400; color:var(--ink); font-size:14px; cursor:pointer;">
+            <input type="radio" name="create-mode" value="manual"> Daftarkan Kunci Manual
+          </label>
+        </div>
+
+        <div class="form-grid">
+          <div><label for="online-email">Email pembeli (otomatis terlihat di akun pembeli)</label><input id="online-email" type="email" placeholder="pembeli@gmail.com"></div>
           <div><label for="online-limit">Batas perangkat</label><input id="online-limit" type="number" min="1" max="50" value="1"></div>
-          <div class="full"><label for="online-mode">Mode masa berlaku</label>
-            <select id="online-mode">
-              <option value="abs">Dari sekarang — tanggal habis dikunci di dalam kunci (disarankan)</option>
-              <option value="rel">Sejak diaktifkan — dihitung saat pertama dipakai</option>
-            </select>
+          
+          <!-- AUTO SECTION -->
+          <div class="full" id="create-auto-section">
+            <div class="form-grid">
+              <div class="full"><label for="online-mode">Mode masa berlaku</label>
+                <select id="online-mode">
+                  <option value="abs">Dari sekarang — tanggal habis dikunci di dalam kunci (disarankan)</option>
+                  <option value="rel">Sejak diaktifkan — dihitung saat pertama dipakai</option>
+                </select>
+              </div>
+              <div><label for="online-days">Masa berlaku (hari)</label><input id="online-days" type="number" min="1" max="365" value="30"></div>
+              <div><label for="online-qty">Jumlah kunci</label><input id="online-qty" type="number" min="1" max="100" value="1"></div>
+            </div>
           </div>
-          <div><label for="online-days">Masa berlaku (hari)</label><input id="online-days" type="number" min="1" max="365" value="30"></div>
-          <div><label for="online-qty">Jumlah kunci</label><input id="online-qty" type="number" min="1" max="100" value="1"></div>
+
+          <!-- MANUAL SECTION -->
+          <div class="full" id="create-manual-section" hidden>
+            <label for="online-manual-keys">Daftar Kunci (pisahkan dengan enter)</label>
+            <textarea id="online-manual-keys" placeholder="BSK-XXXXXX-XXXXXX-XXXXXX-XXXXXX-XXXX&#10;BSK-YYYYYY-YYYYYY-YYYYYY-YYYYYY-YYYY"></textarea>
+          </div>
+
           <div class="full"><label for="online-note">Catatan pesanan</label><input id="online-note" type="text" maxlength="180" placeholder="Nama pembeli / nomor pesanan"></div>
         </div>
         <div class="row">
-          <button class="btn" id="online-create">Buat Kunci v11</button>
+          <button class="btn" id="online-create">Proses Kunci v11</button>
         </div>
         <div class="msg" id="online-create-msg"></div>
         <div id="online-created" class="mt"></div>
@@ -798,28 +817,51 @@ async function loadMyLicenses(){
 // ===== Owner unlock hook =====
 window.addEventListener('basuki:unlocked', ()=>{ if(isOwner) loadOnlineAdmin(); });
 
-// ===== Owner: Create online license (v11 format) =====
+document.querySelectorAll('input[name="create-mode"]').forEach(radio => {
+  radio.addEventListener('change', (e) => {
+    const isAuto = e.target.value === 'auto';
+    $('create-auto-section').hidden = !isAuto;
+    $('create-manual-section').hidden = isAuto;
+  });
+});
+
+// ===== Owner: Create / Register online license =====
 $('online-create').addEventListener('click', async ()=>{
-  const b=$('online-create'); setBusy(b,true,'Membuat kunci...');
+  const b=$('online-create'); setBusy(b,true,'Memproses...');
   $('online-created').innerHTML='';
   try{
+    const isAuto = document.querySelector('input[name="create-mode"]:checked').value === 'auto';
     const priv = window.__basukiAdmin.getPriv();
-    if(!priv) throw new Error('Buka passphrase admin dulu.');
-    const mode=$('online-mode').value;
-    const days=Number($('online-days').value);
-    const qty=Math.max(1,Math.min(100, Number($('online-qty').value)||1));
+    
+    // Cek private key hanya kalau mode Auto
+    if(isAuto && !priv) throw new Error('Buka passphrase admin dulu untuk generate kunci.');
+
     const deviceLimit=Number($('online-limit').value);
     const email=$('online-email').value.trim();
     const note=$('online-note').value.trim();
 
-    if(!(days>=1) || days>365) throw new Error('Masa berlaku 1–365 hari.');
     if(!(deviceLimit>=1) || deviceLimit>50) throw new Error('Batas perangkat 1–50.');
 
-    const p = window.__basukiAdmin.plan(mode, days, 'hari', Date.now()/1000);
     const generated = [];
-    for(let i=0;i<qty;i++){
-      const k = await window.__basukiAdmin.makeKey(priv, p.kind, p.val);
-      generated.push(k);
+
+    if (isAuto) {
+      const mode=$('online-mode').value;
+      const days=Number($('online-days').value);
+      const qty=Math.max(1,Math.min(100, Number($('online-qty').value)||1));
+      if(!(days>=1) || days>365) throw new Error('Masa berlaku 1–365 hari.');
+
+      const p = window.__basukiAdmin.plan(mode, days, 'hari', Date.now()/1000);
+      for(let i=0;i<qty;i++){
+        const k = await window.__basukiAdmin.makeKey(priv, p.kind, p.val);
+        generated.push({ key: k.key, desc: p.text });
+      }
+    } else {
+      const manualText = $('online-manual-keys').value.trim();
+      if (!manualText) throw new Error('Masukkan setidaknya satu kunci manual.');
+      const lines = manualText.split('\n').map(l => l.trim()).filter(Boolean);
+      for (const l of lines) {
+        generated.push({ key: l, desc: 'Kunci Manual (Offline)' });
+      }
     }
 
     const reg = await serverCall('registerOnlineLegacyKeys',{
@@ -832,18 +874,19 @@ $('online-create').addEventListener('click', async ()=>{
     $('online-created').innerHTML = generated.map((k,i)=>{
       const r = reg.results[i] || {};
       return r.ok
-        ? keyCard(k.key, `Kunci ${i+1} dibuat`, `${p.text} • ${deviceLimit} perangkat ${email?'• '+email:''}`)
+        ? keyCard(k.key, `Kunci ${i+1} berhasil diproses`, `${k.desc} • ${deviceLimit} perangkat ${email?'• '+email:''}`)
         : `<div class="created-key"><b class="bad">Gagal</b><div class="muted" style="font-size:12px">${escapeHtml(r.error||'Unknown error')}</div><div class="key-box">${escapeHtml(k.key)}</div></div>`;
     }).join('');
 
     const okCount = reg.results.filter(r=>r.ok).length;
-    message('online-create-msg', `${okCount} dari ${qty} kunci v11 berhasil dibuat & didaftarkan.`, true);
+    message('online-create-msg', `${okCount} dari ${generated.length} kunci v11 berhasil diproses.`, true);
     $('online-note').value='';
+    $('online-manual-keys').value='';
     await loadOnlineAdmin();
   }catch(err){
-    message('online-create-msg', err.message||'Gagal membuat kunci.');
+    message('online-create-msg', err.message||'Gagal memproses kunci.');
   } finally {
-    b.disabled=false; b.textContent='Buat Kunci v11';
+    b.disabled=false; b.textContent='Proses Kunci v11';
   }
 });
 
@@ -863,7 +906,7 @@ function eventName(v){
     device_limit_changed:'Batas perangkat diubah',
     license_extended:'Masa diperpanjang',
     updated:'Metadata diperbarui',
-    license_deleted: 'Lisensi dihapus permanen' // <--- TAMBAHKAN INI
+    license_deleted: 'Lisensi dihapus permanen'
   })[v] || v;
 }
 
@@ -967,7 +1010,7 @@ function renderLicenseList(licenses){
 
     const keyPanel = item.key
       ? `<div class="key-box">${escapeHtml(item.key)}</div><div class="row"><button class="btn ghost small" type="button" data-copy="${escapeHtml(item.key)}">Salin Kunci</button></div>`
-      : `<div class="muted" style="font-size:11.5px;margin-top:6px">Kunci v11 offline tidak disimpan di server.</div>`;
+      : `<div class="muted" style="font-size:11.5px;margin-top:6px">Kunci tidak tersedia di server (dibuat sebelum fitur ini ditambahkan).</div>`;
     const devices = (item.devices||[]).map(dev=>{
       const active=dev.status==='active';
       return `<div class="device-row"><div><div class="name">${escapeHtml(dev.model||'Perangkat')}</div><div class="sub">${escapeHtml(dev.androidVersion||'—')} • ${active?'aktif':'tidak aktif'}<br>Terakhir: ${dateText(dev.lastUseMs)}</div></div><button class="${active?'btn danger small':'btn ghost small'}" data-action="device" data-doc="${escapeHtml(item.docId)}" data-device="${escapeHtml(dev.deviceId)}" data-block="${active?'1':'0'}">${active?'Blokir':'Buka'}</button></div>`;
