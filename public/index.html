@@ -18,8 +18,8 @@
   html,body{height:100%}
   body{
     margin:0;background:
-      radial-gradient(1200px 600px at 20% -10%,rgba(124,108,255,.18),transparent 60%),
-      radial-gradient(1000px 500px at 100% 0%,rgba(39,199,255,.12),transparent 55%),
+      radial-gradient(1200px 600px at 20% -10%,rgba(124,108,255,.15),transparent 60%),
+      radial-gradient(1000px 500px at 100% 0%,rgba(39,199,255,.1),transparent 55%),
       var(--bg);
     color:var(--ink);
     font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
@@ -29,36 +29,49 @@
   input,select,textarea{font:inherit}
   a{color:var(--p2)}
 
-  /* Topbar */
+  /* --- TOPBAR BARU --- */
   .topbar{
     position:sticky;top:0;z-index:50;
     display:flex;align-items:center;justify-content:space-between;gap:16px;
-    padding:14px 22px;
-    background:rgba(10,14,23,.85);
-    backdrop-filter:blur(14px);
+    padding:12px 20px;
+    background:rgba(8,11,18,.85);
+    backdrop-filter:blur(16px);
     border-bottom:1px solid var(--line);
   }
   .brand{display:flex;align-items:center;gap:12px}
   .logo{
-    width:40px;height:40px;border-radius:12px;background:var(--grad);
-    display:grid;place-items:center;font-weight:900;color:#fff;letter-spacing:.5px;
-    box-shadow:0 8px 24px -8px rgba(124,108,255,.6);
+    width:42px;height:42px;border-radius:12px;
+    display:grid;place-items:center;
+    background:#0f1423;
+    box-shadow:0 4px 16px -4px rgba(124,108,255,.4);
+    overflow:hidden;
   }
-  .brand h1{margin:0;font-size:16px;line-height:1.1}
-  .brand .sub{font-size:11.5px;color:var(--mut);letter-spacing:.4px;text-transform:uppercase}
-  .user-info{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .brand-text h1{margin:0;font-size:15px;line-height:1.1;letter-spacing:-.2px}
+  .brand-text .sub{font-size:10px;color:var(--mut);letter-spacing:.6px;text-transform:uppercase;font-weight:600}
+  
+  .user-info{display:flex;align-items:center;gap:12px}
+  .user-profile{display:flex;align-items:center;gap:10px;background:var(--card);padding:4px 12px 4px 4px;border-radius:99px;border:1px solid var(--line)}
   .avatar{
-    width:32px;height:32px;border-radius:50%;background:var(--card2);
-    border:1px solid var(--line);display:grid;place-items:center;
-    font-size:13px;font-weight:700;color:var(--p2);overflow:hidden;
+    width:28px;height:28px;border-radius:50%;background:var(--card2);
+    display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--p2);overflow:hidden;flex-shrink:0;
   }
   .avatar img{width:100%;height:100%;object-fit:cover}
-  .user-email{font-size:13px;color:var(--mut);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .user-email{
+    display:none; /* Sembunyikan email di HP */
+    font-size:12px;font-weight:500;color:var(--mut);
+    max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  
+  /* Tampilkan email jika layar >= 600px (Tablet/PC) */
+  @media (min-width:600px) {
+    .user-email { display:block; }
+    .brand-text h1 { font-size:17px; }
+  }
 
   /* Layout */
-  .container{max-width:1240px;margin:0 auto;padding:24px 22px 80px}
+  .container{max-width:1240px;margin:0 auto;padding:24px 20px 80px}
   .muted{color:var(--mut);font-size:13px}
-  .hint{color:var(--mut);font-size:13px}
+  .hint{color:var(--mut);font-size:13px;line-height:1.6}
   .hint b{color:var(--ink)}
 
   /* Buttons */
@@ -92,7 +105,9 @@
   .tabs{
     display:flex;gap:4px;overflow-x:auto;margin-bottom:20px;
     background:var(--card);border:1px solid var(--line);border-radius:14px;padding:5px;
+    -webkit-overflow-scrolling:touch; scrollbar-width:none;
   }
+  .tabs::-webkit-scrollbar { display: none; }
   .tab{
     flex:0 0 auto;border:0;background:transparent;color:var(--mut);
     padding:10px 16px;border-radius:10px;font-weight:600;font-size:13.5px;
@@ -113,7 +128,7 @@
   }
   .stat::after{content:"";position:absolute;inset:auto -20% -40% auto;width:120px;height:120px;background:var(--grad);opacity:.08;border-radius:50%}
   .stat-label{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
-  .stat-value{font-size:28px;font-weight:800;letter-spacing:-.8px;margin-top:6px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .stat-value{font-size:26px;font-weight:800;letter-spacing:-.8px;margin-top:6px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
   .stat-hint{font-size:11.5px;color:var(--mut2);margin-top:2px}
 
   /* Charts */
@@ -132,19 +147,18 @@
   input:focus,select:focus,textarea:focus{border-color:var(--p1);box-shadow:0 0 0 3px rgba(124,108,255,.15)}
   input[type=checkbox]{width:auto;accent-color:var(--p1)}
 
-  /* License grid */
+  /* License Grid */
   .license-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
   .lic-card{
     background:linear-gradient(180deg,var(--card),var(--card2));
     border:1px solid var(--line);border-radius:14px;padding:16px;
-    transition:border-color .15s, transform .12s;
+    display:flex;flex-direction:column;
   }
-  .lic-card:hover{border-color:#3a4970}
   .lic-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px}
-  .lic-head h4{margin:0;font-size:14px;overflow-wrap:anywhere}
-  .lic-meta{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:12px;color:var(--mut);margin-bottom:12px}
+  .lic-head h4{margin:0;font-size:13.5px;overflow-wrap:anywhere;word-break:break-word}
+  .lic-meta{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;font-size:12px;color:var(--mut);margin-bottom:12px;background:rgba(0,0,0,.2);padding:10px;border-radius:8px}
   .lic-meta b{color:var(--ink);font-weight:600}
-  .badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:.3px}
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:.3px;white-space:nowrap}
   .badge.good{background:rgba(74,222,128,.15);color:#8ff0be}
   .badge.bad{background:rgba(255,107,107,.15);color:#ffb7c2}
   .badge.warn{background:rgba(245,158,11,.15);color:#ffd28a}
@@ -153,10 +167,11 @@
     background:#070b14;border:1px solid var(--line);border-radius:9px;
     padding:9px 11px;margin:8px 0;word-break:break-all;user-select:all;color:#b7c4de;
   }
-  .lic-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-  .lic-actions input[type=number]{max-width:84px;padding:6px 8px;font-size:12.5px}
+  .lic-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:10px;border-top:1px dashed rgba(255,255,255,.1)}
+  .lic-actions input[type=number]{max-width:70px;padding:6px 8px;font-size:12.5px}
+  
   .device-row{
-    display:flex;justify-content:space-between;gap:10px;align-items:flex-start;
+    display:flex;justify-content:space-between;gap:10px;align-items:center;
     padding:9px 0;border-top:1px dashed rgba(255,255,255,.08);font-size:12.5px;
   }
   .device-row:first-child{border-top:0}
@@ -164,8 +179,10 @@
   .device-row .sub{color:var(--mut2);font-size:11.5px;margin-top:2px}
 
   /* Lock card */
-  .lock-card{max-width:420px;margin:40px auto}
-  .lock-card .icon{font-size:34px;margin-bottom:6px}
+  .lock-card{max-width:420px;margin:40px auto;text-align:center}
+  .lock-card .icon{font-size:34px;margin-bottom:12px}
+  .lock-card .btn { width:100%; justify-content:center; margin-top:14px; }
+  .lock-card input { text-align:center; letter-spacing:2px; }
 
   /* Created key result */
   .created-key{
@@ -184,6 +201,12 @@
   .mt{margin-top:14px} .mt-sm{margin-top:8px}
   .stack > * + *{margin-top:14px}
 
+  .info-panel { background:rgba(39,199,255,.05); border:1px solid rgba(39,199,255,.2); border-radius:12px; padding:16px; margin-bottom:18px; }
+  .info-panel h3 { color:var(--p2); margin-bottom:8px; }
+  .info-panel p { margin:0 0 8px; font-size:13px; color:var(--ink); line-height:1.6; }
+  .info-panel ul { margin:0; padding-left:20px; font-size:13px; color:var(--mut); }
+  .info-panel li { margin-bottom:4px; }
+
   /* Responsive */
   @media (max-width: 960px){
     .charts{grid-template-columns:1fr}
@@ -193,9 +216,7 @@
     .stats{grid-template-columns:repeat(2,1fr)}
     .form-grid{grid-template-columns:1fr}
     .container{padding:18px 14px 80px}
-    .topbar{padding:12px 14px}
-    .brand h1{font-size:15px}
-    .user-email{max-width:120px}
+    .topbar{padding:10px 14px}
     .lic-meta{grid-template-columns:1fr}
   }
   [hidden]{display:none !important}
@@ -205,23 +226,44 @@
 
 <header class="topbar">
   <div class="brand">
-    <div class="logo">BM</div>
-    <div>
+    <!-- SVG Logo baru sesuai gambar -->
+    <div class="logo">
+      <svg viewBox="0 0 100 100" width="100%" height="100%">
+        <defs>
+          <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#7c6cff" />
+            <stop offset="100%" stop-color="#27c7ff" />
+          </linearGradient>
+          <linearGradient id="b-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#a78bfa" />
+            <stop offset="100%" stop-color="#38bdf8" />
+          </linearGradient>
+        </defs>
+        <!-- Huruf B -->
+        <path d="M 32 20 L 62 20 C 74 20 82 28 82 40 C 82 48 76 54 68 56 C 78 58 84 65 84 76 C 84 90 74 96 60 96 L 32 96 Z M 48 34 L 48 50 L 60 50 C 66 50 68 46 68 42 C 68 38 66 34 60 34 Z M 48 64 L 48 82 L 62 82 C 68 82 70 78 70 73 C 70 68 68 64 62 64 Z" fill="url(#b-grad)" />
+        <!-- Not Balok -->
+        <path d="M 65 28 L 65 65 C 65 75 52 78 52 68 C 52 60 60 58 65 55 L 65 38 L 80 34 L 80 55 C 80 65 67 68 67 58 C 67 50 75 48 80 45 L 80 28 Z" fill="#ffffff" />
+      </svg>
+    </div>
+    <div class="brand-text">
       <h1>Basuki Music</h1>
-      <div class="sub">License Console</div>
+      <div class="sub">License System</div>
     </div>
   </div>
+  
   <div class="user-info">
-    <div class="avatar" id="avatar" hidden></div>
-    <span class="user-email" id="auth-account"></span>
-    <button class="btn" id="google-login">Masuk dengan Google</button>
-    <button class="btn ghost" id="google-logout" hidden>Keluar</button>
+    <div class="user-profile" id="user-profile" hidden>
+      <div class="avatar" id="avatar"></div>
+      <span class="user-email" id="auth-account"></span>
+    </div>
+    <button class="btn small" id="google-login">Masuk</button>
+    <button class="btn ghost small" id="google-logout" hidden>Keluar</button>
   </div>
 </header>
 
 <main class="container">
 
-<div class="msg" id="auth-msg"></div>
+<div class="msg" id="auth-msg" style="margin-bottom:12px"></div>
 
 <!-- ============ USER PANEL (non-owner) ============ -->
 <section id="user-panel" hidden>
@@ -246,7 +288,7 @@
       <h2>Hubungkan kunci pembelian</h2>
       <div class="hint">Masuk dengan akun Google yang sesuai email pembeli (jika Owner mengunci ke email tertentu), lalu hubungkan kunci di sini.</div>
       <div class="mt-sm"><label for="claim-key">Kunci lisensi</label>
-        <input id="claim-key" type="text" autocomplete="off" spellcheck="false" placeholder="BSK2-... atau kunci v11 lama">
+        <input id="claim-key" type="text" autocomplete="off" spellcheck="false" placeholder="BSK-... atau kunci v11 lama">
       </div>
       <div class="mt"><button class="btn" id="claim-submit">Hubungkan Kunci</button></div>
       <div class="msg" id="claim-msg"></div>
@@ -269,20 +311,30 @@
 
   <div id="lock" class="card lock-card">
     <div class="icon">🔒</div>
-    <h2>Buka alat admin</h2>
-    <div class="hint">Masukkan passphrase untuk membuka private key admin.</div>
-    <div class="mt-sm"><label for="pass">Passphrase</label>
-      <input id="pass" type="password" autocomplete="off" placeholder="passphrase admin">
+    <h2>Buka Alat Admin</h2>
+    <div class="hint">Masukkan passphrase untuk membuka Private Key Anda.</div>
+    <div class="mt-sm">
+      <input id="pass" type="password" autocomplete="off" placeholder="••••••••••••">
     </div>
-    <div class="mt"><button class="btn" id="unlock">Buka</button></div>
-    <div class="msg" id="lockmsg"></div>
+    <div class="msg" id="lockmsg" style="text-align:center"></div>
+    <button class="btn" id="unlock">Buka Passphrase</button>
   </div>
 
   <div id="work" hidden>
+    <!-- Panduan Sistem (Info Panel) -->
+    <div class="info-panel">
+      <h3>ℹ️ Panduan Sistem Lisensi</h3>
+      <p>Web ini memiliki dua jenis lisensi. Jangan bingung jika melihat ada format kunci yang berbeda:</p>
+      <ul>
+        <li><b>Kunci v11 (BSK-XXXXXX-...)</b>: Kunci utama buatan Anda sendiri. Dibuat via tab <b>Buat Lisensi</b> atau <b>v11 Offline</b>. Bisa dijual dan dibaca oleh APK v11.</li>
+        <li><b>Kunci Web/Trial (BSK2-...)</b>: Kunci otomatis dari sistem web untuk user yang klik "Ambil Trial". (Contoh: email mbasuki3321@gmail.com di bawah). Anda bisa memblokir atau menghapusnya jika mengganggu.</li>
+      </ul>
+    </div>
+
     <nav class="tabs">
       <button class="tab active" data-tab="dash">Dashboard</button>
-      <button class="tab" data-tab="create">Buat Lisensi</button>
-      <button class="tab" data-tab="legacy">Kunci v11 Offline</button>
+      <button class="tab" data-tab="create">Buat Lisensi v11</button>
+      <button class="tab" data-tab="legacy">Offline Generator</button>
       <button class="tab" data-tab="settings">Pengaturan</button>
     </nav>
 
@@ -327,7 +379,7 @@
     <div class="panel" data-panel="create">
       <div class="card">
         <h2>Buat kunci v11 baru (online)</h2>
-        <div class="hint">Kunci dibuat <b>di browser</b> dengan private key v11 Anda, lalu <b>didaftarkan ke server</b> untuk manajemen perangkat, email, dan pemblokiran. Format kunci sama seperti APK v11 lama (BSK-XXXXXX-…), sehingga kompatibel langsung.</div>
+        <div class="hint">Kunci dibuat <b>di browser</b> dengan private key v11 Anda, lalu <b>didaftarkan ke server</b> untuk manajemen perangkat, email, dan pemblokiran. Format kunci sama seperti APK v11 lama (BSK-XXXXXX-…).</div>
         <div class="form-grid mt">
           <div><label for="online-email">Email pembeli (opsional)</label><input id="online-email" type="email" placeholder="pembeli@gmail.com"></div>
           <div><label for="online-limit">Batas perangkat</label><input id="online-limit" type="number" min="1" max="50" value="1"></div>
@@ -446,7 +498,6 @@ async function makeKey(priv,kind,val,ver){
 }
 //CORE-END
 
-// Expose untuk script module (v11 signing dari sisi web online)
 let PRIV = null, PRIVJWK = null;
 window.__basukiAdmin = {
   getPriv: () => PRIV,
@@ -485,7 +536,6 @@ window.__basukiAdmin = {
       if(PRIVJWK.x!==PUBJ.x||PRIVJWK.y!==PUBJ.y) throw new Error('mismatch');
       window.__basukiAdmin.getPriv = () => PRIV;
       $('lock').hidden = true; $('work').hidden = false; $('pass').value=''; renderHist();
-      // dispatch event agar module script bisa load dashboard
       window.dispatchEvent(new CustomEvent('basuki:unlocked'));
     }catch(e){ say('lockmsg','Passphrase salah atau file rusak.','bad'); }
     b.disabled=false;
@@ -604,13 +654,12 @@ document.addEventListener('click', async e=>{
   b.textContent=ok?'Tersalin':'Salin manual';
 });
 
-// Tab handling (owner & user panels)
+// Tab handling
 document.addEventListener('click', e=>{
   const tab=e.target.closest('.tab'); if(!tab) return;
   const scope=tab.parentElement;
   const target=tab.dataset.tab;
   scope.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t===tab));
-  // find sibling panels
   const parent=scope.parentElement;
   parent.querySelectorAll(':scope > .panel').forEach(p=>{
     p.classList.toggle('active', p.dataset.panel===target);
@@ -640,7 +689,7 @@ if(!firebaseConfig||!firebaseConfig.apiKey||!firebaseConfig.projectId||!firebase
     await setPersistence(auth,browserLocalPersistence);
 
     $('google-login').addEventListener('click', async ()=>{
-      const b=$('google-login'); setBusy(b,true,'Menghubungkan...');
+      const b=$('google-login'); setBusy(b,true,'...');
       const provider=new GoogleAuthProvider();
       provider.setCustomParameters({prompt:'select_account'});
       try{
@@ -649,17 +698,18 @@ if(!firebaseConfig||!firebaseConfig.apiKey||!firebaseConfig.projectId||!firebase
         message('auth-msg',`Login berhasil sebagai ${cred.user.email||'akun Google'}.`,true);
       }catch(err){
         message('auth-msg',showAuthError(err));
-        b.disabled=false; b.textContent='Masuk dengan Google';
+        b.disabled=false; b.textContent='Masuk';
       }
     });
 
     $('google-logout').addEventListener('click', async ()=>{
-      const b=$('google-logout'); b.disabled=true; b.textContent='Keluar...';
+      const b=$('google-logout'); b.disabled=true; b.textContent='...';
       try{
         await signOut(auth);
         activeUser=null; isOwner=false; onlineData={licenses:[],events:[]};
         toggle($('user-panel'),false); toggle($('owner-wrap'),false); toggle($('lock'),false); toggle($('work'),false);
-        $('auth-account').textContent=''; $('avatar').hidden=true;
+        $('auth-account').textContent=''; 
+        $('user-profile').hidden=true;
         message('auth-msg','Kamu sudah keluar.',true);
       }catch(err){ message('auth-msg',showAuthError(err)); }
       finally{ b.disabled=false; b.textContent='Keluar'; }
@@ -670,11 +720,17 @@ if(!firebaseConfig||!firebaseConfig.apiKey||!firebaseConfig.projectId||!firebase
       const signed=!!user;
       toggle($('google-login'),!signed);
       toggle($('google-logout'),signed);
-      $('auth-account').textContent=signed?(user.email||'akun Google'):'';
-      const av=$('avatar');
-      if(signed && user.photoURL){ av.innerHTML='<img src="'+user.photoURL+'" alt="">'; av.hidden=false; }
-      else if(signed){ av.textContent=(user.email||'?')[0].toUpperCase(); av.hidden=false; }
-      else av.hidden=true;
+      
+      const profile = $('user-profile');
+      if(signed) {
+        $('auth-account').textContent=user.email||'akun';
+        const av=$('avatar');
+        if(user.photoURL){ av.innerHTML='<img src="'+user.photoURL+'" alt="">'; }
+        else { av.textContent=(user.email||'?')[0].toUpperCase(); }
+        profile.hidden = false;
+      } else {
+        profile.hidden = true;
+      }
 
       isOwner = signed && (user.email||'').toLowerCase()===OWNER_EMAIL;
       toggle($('user-panel'), signed && !isOwner);
@@ -794,7 +850,21 @@ $('online-create').addEventListener('click', async ()=>{
 $('online-refresh').addEventListener('click', loadOnlineAdmin);
 
 function eventName(v){
-  return ({created:'Kunci dibuat',trial_created:'Trial dibuat',claimed:'Kunci dihubungkan',device_activated:'Perangkat diaktifkan',device_replaced:'Perangkat digantikan',license_blocked:'Lisensi diblokir',license_unblocked:'Lisensi dibuka',device_blocked:'Perangkat diblokir',device_unblocked:'Perangkat dibuka',device_limit_changed:'Batas perangkat diubah',license_extended:'Masa diperpanjang',updated:'Metadata diperbarui'})[v] || v;
+  return ({
+    created:'Kunci dibuat',
+    trial_created:'Trial dibuat',
+    claimed:'Kunci dihubungkan',
+    device_activated:'Perangkat diaktifkan',
+    device_replaced:'Perangkat digantikan',
+    license_blocked:'Lisensi diblokir',
+    license_unblocked:'Lisensi dibuka',
+    device_blocked:'Perangkat diblokir',
+    device_unblocked:'Perangkat dibuka',
+    device_limit_changed:'Batas perangkat diubah',
+    license_extended:'Masa diperpanjang',
+    updated:'Metadata diperbarui',
+    license_deleted: 'Lisensi dihapus permanen' // <--- TAMBAHKAN INI
+  })[v] || v;
 }
 
 async function loadOnlineAdmin(){
@@ -863,7 +933,7 @@ function renderTypesChart(licenses){
   chartTypes=new Chart(ctx,{
     type:'doughnut',
     data:{
-      labels:['Trial','Berbayar','v11 Legacy','Owner'],
+      labels:['Trial','Berbayar (Web)','v11 Legacy','Owner'],
       datasets:[{ data:[types.trial,types.paid,types.legacy,types.owner], backgroundColor:['#27c7ff','#7c6cff','#f59e0b','#4ade80'], borderWidth:0, hoverOffset:6 }]
     },
     options:{
@@ -878,7 +948,7 @@ function renderTypesChart(licenses){
 
 function renderLicenseList(licenses){
   const box=$('online-licenses');
-  if(!licenses.length){ box.innerHTML='<div class="muted">Belum ada kunci online.</div>'; return; }
+  if(!licenses.length){ box.innerHTML='<div class="muted">Belum ada kunci.</div>'; return; }
   const now=Date.now();
   box.innerHTML = '<div class="license-grid">' + licenses.map(item=>{
     const expired=!item.isPermanent && item.expiresAtMs && item.expiresAtMs<=now;
@@ -888,16 +958,24 @@ function renderLicenseList(licenses){
                 : expired ? '<span class="badge bad">Kedaluwarsa</span>'
                 : pending ? '<span class="badge warn">Belum aktif</span>'
                 : '<span class="badge good">Aktif</span>';
+    
+    let kindLabel = item.kind;
+    if(item.kind === 'trial') kindLabel = 'Trial Web';
+    if(item.kind === 'legacy') kindLabel = 'Kunci v11 (APK)';
+    if(item.kind === 'paid') kindLabel = 'Web Berbayar';
+    if(item.kind === 'owner') kindLabel = 'Owner';
+
     const keyPanel = item.key
-      ? `<div class="key-box">${escapeHtml(item.key)}</div><div class="row"><button class="btn ghost small" type="button" data-copy="${escapeHtml(item.key)}">Salin</button></div>`
-      : `<div class="muted" style="font-size:11.5px;margin-top:6px">Kunci v11 lama tidak disimpan sebagai teks di server.</div>`;
+      ? `<div class="key-box">${escapeHtml(item.key)}</div><div class="row"><button class="btn ghost small" type="button" data-copy="${escapeHtml(item.key)}">Salin Kunci</button></div>`
+      : `<div class="muted" style="font-size:11.5px;margin-top:6px">Kunci v11 offline tidak disimpan di server.</div>`;
     const devices = (item.devices||[]).map(dev=>{
       const active=dev.status==='active';
       return `<div class="device-row"><div><div class="name">${escapeHtml(dev.model||'Perangkat')}</div><div class="sub">${escapeHtml(dev.androidVersion||'—')} • ${active?'aktif':'tidak aktif'}<br>Terakhir: ${dateText(dev.lastUseMs)}</div></div><button class="${active?'btn danger small':'btn ghost small'}" data-action="device" data-doc="${escapeHtml(item.docId)}" data-device="${escapeHtml(dev.deviceId)}" data-block="${active?'1':'0'}">${active?'Blokir':'Buka'}</button></div>`;
     }).join('') || '<div class="muted" style="font-size:12px;padding:8px 0">Belum ada perangkat.</div>';
+    
     return `<div class="lic-card">
       <div class="lic-head">
-        <div><h4>${escapeHtml(item.email||'Belum diklaim')}</h4><div class="muted" style="font-size:11.5px;margin-top:2px">${escapeHtml(item.kind)} • ${escapeHtml(item.note||'—')}</div></div>
+        <div><h4>${escapeHtml(item.email||'Belum diklaim')}</h4><div class="muted" style="font-size:11.5px;margin-top:2px">${escapeHtml(kindLabel)} • ${escapeHtml(item.note||'—')}</div></div>
         <div>${badge}</div>
       </div>
       <div class="lic-meta">
@@ -909,10 +987,11 @@ function renderLicenseList(licenses){
       ${keyPanel}
       <div class="lic-actions">
         <input type="number" min="1" max="50" class="limit-input" value="${Number(item.deviceLimit)||1}" title="Batas perangkat">
-        <button class="btn ghost small" data-action="limit" data-doc="${escapeHtml(item.docId)}">Simpan batas</button>
+        <button class="btn ghost small" data-action="limit" data-doc="${escapeHtml(item.docId)}">Simpan</button>
         <input type="number" min="1" max="365" class="extend-input" value="30" ${item.isPermanent?'disabled':''} title="Tambah hari">
         <button class="btn ghost small" data-action="extend" data-doc="${escapeHtml(item.docId)}" ${item.isPermanent?'disabled':''}>Perpanjang</button>
         <button class="${item.revoked?'btn ghost small':'btn danger small'}" data-action="revoke" data-doc="${escapeHtml(item.docId)}" data-revoked="${item.revoked?'1':'0'}">${item.revoked?'Buka blokir':'Blokir'}</button>
+        <button class="btn danger small" data-action="delete" data-doc="${escapeHtml(item.docId)}" style="margin-left:auto; background:#3b1111; border:1px solid #ff6b6b; color:#ff6b6b;">Hapus</button>
       </div>
       <div class="mt-sm"><div class="muted" style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Perangkat</div>${devices}</div>
     </div>`;
@@ -931,6 +1010,13 @@ function renderEvents(events){
 $('online-licenses').addEventListener('click', async e=>{
   const b=e.target.closest('button[data-action]'); if(!b) return;
   const action=b.dataset.action, doc=b.dataset.doc;
+  
+  if (action === 'delete') {
+    if (!confirm('⚠️ PERINGATAN!\n\nApakah Anda yakin ingin MENGHAPUS PERMANEN lisensi ini?\nSemua data perangkat dan riwayat terkait akan hilang dan tidak bisa dikembalikan.')) {
+      return;
+    }
+  }
+
   b.disabled=true;
   try{
     if(action==='revoke') await serverCall('updateLicense',{licenseDocId:doc,revoked:b.dataset.revoked!=='1'});
@@ -943,6 +1029,10 @@ $('online-licenses').addEventListener('click', async e=>{
       const days=Number(b.closest('.lic-card').querySelector('.extend-input').value);
       await serverCall('extendLicense',{licenseDocId:doc,addDays:days});
     }
+    if(action==='delete') {
+      await serverCall('deleteLicense', {licenseDocId: doc});
+    }
+    
     await loadOnlineAdmin();
   }catch(err){
     alert(err.message||'Perubahan gagal disimpan.');
