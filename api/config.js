@@ -2,24 +2,37 @@
 
 module.exports = function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
-  if (req.method !== 'GET') return res.status(405).json({ message: 'Gunakan GET.' });
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
-  const projectId = process.env.FIREBASE_PROJECT_ID || '';
-  const apiKey = process.env.FIREBASE_WEB_API_KEY || '';
-  const appId = process.env.FIREBASE_APP_ID || '';
-  // Use Firebase's own auth domain for the popup flow. This avoids sending
-  // OAuth callbacks to a Vercel /__/auth/handler route that may return 404.
+  if (req.method !== 'GET') {
+    return res.status(405).json({ ok: false, message: 'Gunakan GET.' });
+  }
+
+  const projectId = String(process.env.FIREBASE_PROJECT_ID || '').trim();
+  const apiKey = String(process.env.FIREBASE_WEB_API_KEY || '').trim();
+  const appId = String(process.env.FIREBASE_APP_ID || '').trim();
+  const ownerEmail = String(
+    process.env.OWNER_EMAIL || 'muhammadbasuki336@gmail.com'
+  ).trim().toLowerCase();
+
+  // Use Firebase's own auth domain for the Google popup flow.
   const config = {
     apiKey,
     authDomain: `${projectId}.firebaseapp.com`,
     projectId,
     appId,
-    messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || ''
+    messagingSenderId: String(process.env.FIREBASE_MESSAGING_SENDER_ID || ''),
+    // Must match OWNER_EMAIL used by lib/license-service.cjs.
+    ownerEmail
   };
 
   const missing = ['apiKey', 'projectId', 'appId'].filter(key => !config[key]);
   if (missing.length) {
-    return res.status(503).json({ ok: false, message: `Konfigurasi Vercel belum lengkap: ${missing.join(', ')}.` });
+    return res.status(503).json({
+      ok: false,
+      message: `Konfigurasi Vercel belum lengkap: ${missing.join(', ')}.`
+    });
   }
+
   return res.status(200).json(config);
 };
