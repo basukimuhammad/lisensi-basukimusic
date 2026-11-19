@@ -29,7 +29,7 @@
   input,select,textarea{font:inherit}
   a{color:var(--p2)}
 
-  /* --- TOPBAR --- */
+  /* Topbar */
   .topbar{
     position:sticky;top:0;z-index:50;
     display:flex;align-items:center;justify-content:space-between;gap:16px;
@@ -40,7 +40,7 @@
   }
   .brand{display:flex;align-items:center;gap:12px}
   
-  /* LOGO STYLE */
+  /* LOGO STYLE (Otomatis mengambil gambar logo.png jika ada) */
   .logo{
     width:44px;height:44px;
     border-radius:12px;
@@ -182,10 +182,10 @@
   .device-row .name{font-weight:600;color:var(--ink);font-size:13px}
   .device-row .sub{color:var(--mut2);font-size:11.5px;margin-top:2px}
 
-  /* Lock card */
-  .lock-card{max-width:420px;margin:40px auto;text-align:center}
-  .lock-card .icon{font-size:34px;margin-bottom:12px}
-  .lock-card .btn { width:100%; justify-content:center; margin-top:14px; }
+  /* Lock card & Welcome Screen */
+  .lock-card{max-width:400px;margin:10vh auto;text-align:center}
+  .lock-card .icon{font-size:44px;margin-bottom:12px}
+  .lock-card .btn { width:100%; justify-content:center; margin-top:16px; }
   .lock-card input { text-align:center; letter-spacing:2px; }
 
   /* Created key result */
@@ -231,17 +231,10 @@
 <header class="topbar">
   <div class="brand">
     <div class="logo">
-      <!-- 
-        CARA 1 (PALING MIRIP): 
-        Upload gambar Anda ke Vercel dengan nama "logo.png". 
-        Kode di bawah ini akan otomatis memuat gambar tersebut.
-      -->
+      <!-- Gambar logo asli (pastikan file logo.png ada di folder Vercel) -->
       <img src="logo.png" alt="Basuki Music" onerror="this.style.display='none'; document.getElementById('svg-logo').style.display='block';">
       
-      <!-- 
-        CARA 2 (CADANGAN): 
-        Jika gambar belum di-upload, SVG ini akan muncul (lebih mirip dari sebelumnya).
-      -->
+      <!-- SVG Cadangan (Jika logo.png tidak ditemukan) -->
       <svg id="svg-logo" style="display:none" viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -260,17 +253,11 @@
             </feMerge>
           </filter>
         </defs>
-        
-        <!-- Background Icon -->
         <rect width="100" height="100" rx="22" fill="url(#bgGrad)" />
         <circle cx="60" cy="80" r="50" fill="#0ea5e9" opacity="0.15" filter="blur(10px)" />
-        
-        <!-- Huruf B -->
         <g filter="url(#glow)">
           <path d="M 32 20 L 60 20 C 74 20 82 28 82 40 C 82 48 76 54 68 56 C 78 58 84 66 84 78 C 84 92 74 98 60 98 L 32 98 Z M 48 34 V 48 H 60 C 66 48 68 44 68 40 C 68 36 66 34 60 34 Z M 48 64 V 84 H 60 C 66 84 68 80 68 74 C 68 68 66 64 60 64 Z" fill="url(#bGrad)" />
         </g>
-        
-        <!-- Not Balok -->
         <g fill="#ffffff">
           <ellipse cx="66" cy="75" rx="13" ry="9.5" transform="rotate(-15 66 75)" />
           <path d="M 76 35 V 75 C 76 75 82 75 82 70 V 42 Z" />
@@ -297,6 +284,16 @@
 <main class="container">
 
 <div class="msg" id="auth-msg" style="margin-bottom:12px"></div>
+
+<!-- ============ WELCOME SCREEN (Tampil Saat Belum Login) ============ -->
+<section id="welcome-screen" hidden>
+  <div class="card lock-card">
+    <div class="icon">🎵</div>
+    <h2>Basuki Music</h2>
+    <div class="hint" style="margin-bottom: 24px;">Masuk dengan akun Google Anda untuk mengakses lisensi atau mengelola sistem.</div>
+    <button class="btn" id="google-login-center">Masuk dengan Google</button>
+  </div>
+</section>
 
 <!-- ============ USER PANEL (non-owner) ============ -->
 <section id="user-panel" hidden>
@@ -723,6 +720,18 @@ document.addEventListener('click', e=>{
   if(target==='dash') loadOnlineAdmin();
 });
 
+// [FIXED] Reset Button States
+function resetAuthButtons() {
+  const loginBtn = $('google-login');
+  if(loginBtn) { loginBtn.disabled = false; loginBtn.textContent = 'Masuk'; }
+  
+  const loginCenterBtn = $('google-login-center');
+  if(loginCenterBtn) { loginCenterBtn.disabled = false; loginCenterBtn.textContent = 'Masuk dengan Google'; }
+  
+  const logoutBtn = $('google-logout');
+  if(logoutBtn) { logoutBtn.disabled = false; logoutBtn.textContent = 'Keluar'; }
+}
+
 // ===== Firebase init =====
 let firebaseConfig=null;
 try{
@@ -733,30 +742,36 @@ try{
 }catch(err){
   message('auth-msg',err.message||'Gagal memuat konfigurasi Firebase.');
   $('google-login').disabled=true;
+  $('google-login-center').disabled=true;
 }
 
 if(!firebaseConfig||!firebaseConfig.apiKey||!firebaseConfig.projectId||!firebaseConfig.appId){
   message('auth-msg','Konfigurasi Firebase belum lengkap. Atur FIREBASE_PROJECT_ID, FIREBASE_WEB_API_KEY, FIREBASE_APP_ID di Vercel.');
   $('google-login').disabled=true;
+  $('google-login-center').disabled=true;
 } else {
   try{
     const app=initializeApp(firebaseConfig);
     auth=getAuth(app);
     await setPersistence(auth,browserLocalPersistence);
 
-    $('google-login').addEventListener('click', async ()=>{
-      const b=$('google-login'); setBusy(b,true,'...');
-      const provider=new GoogleAuthProvider();
-      provider.setCustomParameters({prompt:'select_account'});
-      try{
-        const cred=await signInWithPopup(auth,provider);
-        activeUser=cred.user;
-        message('auth-msg',`Login berhasil sebagai ${cred.user.email||'akun Google'}.`,true);
-      }catch(err){
-        message('auth-msg',showAuthError(err));
-        b.disabled=false; b.textContent='Masuk';
+    const handleLogin = async (btn) => {
+      if (!auth) return;
+      setBusy(btn, true, 'Menghubungkan...');
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({prompt: 'select_account'});
+      try {
+        const cred = await signInWithPopup(auth, provider);
+        activeUser = cred.user;
+        message('auth-msg', `Login berhasil sebagai ${cred.user.email || 'akun Google'}.`, true);
+      } catch (err) {
+        message('auth-msg', showAuthError(err));
+        resetAuthButtons();
       }
-    });
+    };
+
+    $('google-login').addEventListener('click', () => handleLogin($('google-login')));
+    $('google-login-center').addEventListener('click', () => handleLogin($('google-login-center')));
 
     $('google-logout').addEventListener('click', async ()=>{
       const b=$('google-logout'); b.disabled=true; b.textContent='...';
@@ -768,14 +783,18 @@ if(!firebaseConfig||!firebaseConfig.apiKey||!firebaseConfig.projectId||!firebase
         $('user-profile').hidden=true;
         message('auth-msg','Kamu sudah keluar.',true);
       }catch(err){ message('auth-msg',showAuthError(err)); }
-      finally{ b.disabled=false; b.textContent='Keluar'; }
+      finally{ resetAuthButtons(); }
     });
 
     onAuthStateChanged(auth, async user=>{
       activeUser=user;
       const signed=!!user;
-      toggle($('google-login'),!signed);
-      toggle($('google-logout'),signed);
+      
+      resetAuthButtons(); // Pastikan tombol selalu normal
+      
+      toggle($('welcome-screen'), !signed);
+      toggle($('google-login'), !signed);
+      toggle($('google-logout'), signed);
       
       const profile = $('user-profile');
       if(signed) {
@@ -791,10 +810,12 @@ if(!firebaseConfig||!firebaseConfig.apiKey||!firebaseConfig.projectId||!firebase
       isOwner = signed && (user.email||'').toLowerCase()===OWNER_EMAIL;
       toggle($('user-panel'), signed && !isOwner);
       toggle($('owner-wrap'), isOwner);
+      
       if(!signed){
         toggle($('lock'),false); toggle($('work'),false);
         return;
       }
+      
       if(isOwner){
         message('auth-msg','Akun Owner terverifikasi. Buka alat admin dengan passphrase.',true);
         $('lock').hidden=false; $('work').hidden=true;
@@ -806,6 +827,7 @@ if(!firebaseConfig||!firebaseConfig.apiKey||!firebaseConfig.projectId||!firebase
   }catch(err){
     message('auth-msg',showAuthError(err));
     $('google-login').disabled=true;
+    $('google-login-center').disabled=true;
   }
 }
 
