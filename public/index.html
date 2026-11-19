@@ -357,7 +357,7 @@
       <p>Web ini memiliki dua jenis lisensi. Jangan bingung jika melihat ada format kunci yang berbeda:</p>
       <ul>
         <li><b>Kunci v11 (BSK-XXXXXX-...)</b>: Kunci utama buatan Anda sendiri. Dibuat via tab <b>Buat Lisensi</b> atau <b>v11 Offline</b>. Bisa dijual dan dibaca oleh APK v11.</li>
-        <li><b>Kunci Web/Trial (BSK2-...)</b>: Kunci otomatis dari sistem web untuk user yang klik "Ambil Trial". (Contoh: email mbasuki3321@gmail.com di bawah). Anda bisa memblokir atau menghapusnya jika mengganggu.</li>
+        <li><b>Kunci Trial/Pembelian (BSK-...)</b>: Kunci bertanda tangan digital yang kompatibel dengan APK v11. Status, masa berlaku, blokir, dan perangkat diperiksa langsung ke server.</li>
       </ul>
     </div>
 
@@ -554,6 +554,7 @@ async function makeKey(priv,kind,val,ver){
 let PRIV = null, PRIVJWK = null;
 window.__basukiAdmin = {
   getPriv: () => PRIV,
+  getPrivJwk: () => PRIVJWK,
   isUnlocked: () => !!PRIV,
   makeKey, plan
 };
@@ -646,7 +647,7 @@ window.__basukiAdmin = {
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/13.3.0/firebase-app.js';
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from 'https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js';
 
-const OWNER_EMAIL = 'muhammadbasuki336@gmail.com';
+let OWNER_EMAIL = 'muhammadbasuki336@gmail.com';
 const $ = id => document.getElementById(id);
 const escapeHtml = v => String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const dateText = v => v ? new Date(v).toLocaleString('id-ID') : 'Belum tersedia';
@@ -739,6 +740,7 @@ try{
   const p=await r.json().catch(()=>({}));
   if(!r.ok) throw new Error(p.message||'Konfigurasi Firebase belum diisi di Vercel.');
   firebaseConfig=p;
+  OWNER_EMAIL=String(firebaseConfig.ownerEmail||OWNER_EMAIL).trim().toLowerCase();
 }catch(err){
   message('auth-msg',err.message||'Gagal memuat konfigurasi Firebase.');
   $('google-login').disabled=true;
@@ -874,7 +876,18 @@ async function loadMyLicenses(){
 }
 
 // ===== Owner unlock hook =====
-window.addEventListener('basuki:unlocked', ()=>{ if(isOwner) loadOnlineAdmin(); });
+window.addEventListener('basuki:unlocked', async ()=>{
+  if(!isOwner) return;
+  loadOnlineAdmin();
+  try{
+    const privateJwk = window.__basukiAdmin && window.__basukiAdmin.getPrivJwk && window.__basukiAdmin.getPrivJwk();
+    if(!privateJwk) throw new Error('Private key v11 tidak terbuka. Masukkan passphrase admin.');
+    await serverCall('installLegacySigner',{privateJwk});
+    message('auth-msg','Penanda tangan BSK v11 berhasil diamankan di server. Trial pengguna kini dapat memakai format BSK yang dibaca APK v11.',true);
+  }catch(err){
+    message('auth-msg','Signer BSK v11 belum tersimpan: '+(err.message||'Gagal mengirim private key.'),false);
+  }
+});
 
 document.querySelectorAll('input[name="create-mode"]').forEach(radio => {
   radio.addEventListener('change', (e) => {
@@ -1062,9 +1075,9 @@ function renderLicenseList(licenses){
                 : '<span class="badge good">Aktif</span>';
     
     let kindLabel = item.kind;
-    if(item.kind === 'trial') kindLabel = 'Trial Web';
+    if(item.kind === 'trial') kindLabel = 'Trial 7 hari (APK v11)';
     if(item.kind === 'legacy') kindLabel = 'Kunci v11 (APK)';
-    if(item.kind === 'paid') kindLabel = 'Web Berbayar';
+    if(item.kind === 'paid') kindLabel = 'Berbayar BSK v11';
     if(item.kind === 'owner') kindLabel = 'Owner';
 
     const keyPanel = item.key
