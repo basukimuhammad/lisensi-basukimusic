@@ -29,7 +29,7 @@
   input,select,textarea{font:inherit}
   a{color:var(--p2)}
 
-  /* Topbar */
+  /* --- TOPBAR BARU --- */
   .topbar{
     position:sticky;top:0;z-index:50;
     display:flex;align-items:center;justify-content:space-between;gap:16px;
@@ -40,11 +40,10 @@
   }
   .brand{display:flex;align-items:center;gap:12px}
   .logo{
-    width:42px;height:42px;border-radius:12px;
+    width:44px;height:44px;border-radius:12px;
     display:grid;place-items:center;
-    background:#0f1423;
-    box-shadow:0 4px 16px -4px rgba(124,108,255,.4);
     overflow:hidden;
+    box-shadow:0 4px 16px -4px rgba(124,108,255,.4);
   }
   .brand-text h1{margin:0;font-size:15px;line-height:1.1;letter-spacing:-.2px}
   .brand-text .sub{font-size:10px;color:var(--mut);letter-spacing:.6px;text-transform:uppercase;font-weight:600}
@@ -225,20 +224,35 @@
 
 <header class="topbar">
   <div class="brand">
+    <!-- SVG Logo Baru (Persis Gambar) -->
     <div class="logo">
       <svg viewBox="0 0 100 100" width="100%" height="100%">
         <defs>
-          <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#7c6cff" />
-            <stop offset="100%" stop-color="#27c7ff" />
-          </linearGradient>
           <linearGradient id="b-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#a78bfa" />
-            <stop offset="100%" stop-color="#38bdf8" />
+            <stop offset="0%" stop-color="#a855f7" />
+            <stop offset="100%" stop-color="#0ea5e9" />
           </linearGradient>
+          <radialGradient id="bg-glow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.25" />
+            <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+          </radialGradient>
         </defs>
-        <path d="M 32 20 L 62 20 C 74 20 82 28 82 40 C 82 48 76 54 68 56 C 78 58 84 65 84 76 C 84 90 74 96 60 96 L 32 96 Z M 48 34 L 48 50 L 60 50 C 66 50 68 46 68 42 C 68 38 66 34 60 34 Z M 48 64 L 48 82 L 62 82 C 68 82 70 78 70 73 C 70 68 68 64 62 64 Z" fill="url(#b-grad)" />
-        <path d="M 65 28 L 65 65 C 65 75 52 78 52 68 C 52 60 60 58 65 55 L 65 38 L 80 34 L 80 55 C 80 65 67 68 67 58 C 67 50 75 48 80 45 L 80 28 Z" fill="#ffffff" />
+        <!-- Background Icon -->
+        <rect width="100" height="100" rx="22" fill="#070a13" />
+        <rect width="100" height="100" rx="22" fill="url(#bg-glow)" />
+        
+        <!-- Huruf B -->
+        <path d="M 30 22 L 58 22 C 74 22 82 32 82 46 C 82 56 74 64 64 66 C 76 68 84 76 84 88 C 84 102 74 110 58 110 L 30 110 Z M 46 36 L 46 52 L 58 52 C 64 52 68 48 68 44 C 68 40 64 36 58 36 Z M 46 66 L 46 96 L 60 96 C 68 96 72 92 72 84 C 72 76 68 66 60 66 Z" fill="url(#b-grad)" />
+        
+        <!-- Not Balok (♪) -->
+        <g fill="#ffffff">
+          <!-- Kepala Not -->
+          <ellipse cx="66" cy="76" rx="11" ry="8.5" transform="rotate(-15 66 76)" />
+          <!-- Tangkai Not -->
+          <path d="M 75 40 V 75 C 75 75 81 73 81 65 V 46 C 81 46 78 43 75 40 Z" />
+          <!-- Bendera Not -->
+          <path d="M 75 40 C 87 40 90 50 90 60 C 86 50 78 48 75 48 Z" />
+        </g>
       </svg>
     </div>
     <div class="brand-text">
