@@ -42,11 +42,12 @@
   
   /* LOGO STYLE */
   .logo{
-    width:44px;height:44px;border-radius:12px;
-    display:grid;place-items:center;
+    width:44px;height:44px;
+    border-radius:12px;
     overflow:hidden;
-    background:#090a0f;
-    box-shadow:0 4px 16px -4px rgba(124,108,255,.4);
+    flex-shrink:0;
+    box-shadow:0 4px 16px -4px rgba(39,199,255,.3);
+    background:#0a0d14;
   }
   .logo img { width:100%; height:100%; object-fit:cover; display:block; }
   
@@ -229,74 +230,53 @@
 
 <header class="topbar">
   <div class="brand">
-    <!-- 
-      CARA PAKAI GAMBAR ASLI:
-      1. Simpan gambar logo Anda sebagai "logo.png".
-      2. Upload ke folder yang sama dengan index.html ini.
-      3. Hapus tag <svg>...</svg> di bawah ini, dan hapus tanda komentar pada tag <img> di bawahnya.
-    -->
     <div class="logo">
-      <!-- KODE SVG CADANGAN (Jika tidak pakai gambar) -->
-      <svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <!-- 
+        CARA 1 (PALING MIRIP): 
+        Upload gambar Anda ke Vercel dengan nama "logo.png". 
+        Kode di bawah ini akan otomatis memuat gambar tersebut.
+      -->
+      <img src="logo.png" alt="Basuki Music" onerror="this.style.display='none'; document.getElementById('svg-logo').style.display='block';">
+      
+      <!-- 
+        CARA 2 (CADANGAN): 
+        Jika gambar belum di-upload, SVG ini akan muncul (lebih mirip dari sebelumnya).
+      -->
+      <svg id="svg-logo" style="display:none" viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <linearGradient id="b-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#a855f7" />
-            <stop offset="100%" stop-color="#0ea5e9" />
+          <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#0c0f17" />
+            <stop offset="100%" stop-color="#101e2b" />
           </linearGradient>
-          <radialGradient id="glow" cx="50%" cy="80%" r="50%">
-            <stop offset="0%" stop-color="#00a8ff" stop-opacity="0.5" />
-            <stop offset="100%" stop-color="#00a8ff" stop-opacity="0" />
-          </radialGradient>
-          <filter id="blur">
-            <feGaussianBlur stdDeviation="6" />
+          <linearGradient id="bGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#a855f7" />
+            <stop offset="100%" stop-color="#06b6d4" />
+          </linearGradient>
+          <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="2.5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
           </filter>
         </defs>
         
         <!-- Background Icon -->
-        <rect width="100" height="100" rx="22" fill="#0a0d14" />
+        <rect width="100" height="100" rx="22" fill="url(#bgGrad)" />
+        <circle cx="60" cy="80" r="50" fill="#0ea5e9" opacity="0.15" filter="blur(10px)" />
         
-        <!-- Glow Effect -->
-        <circle cx="50" cy="85" r="40" fill="url(#glow)" filter="url(#blur)" />
+        <!-- Huruf B -->
+        <g filter="url(#glow)">
+          <path d="M 32 20 L 60 20 C 74 20 82 28 82 40 C 82 48 76 54 68 56 C 78 58 84 66 84 78 C 84 92 74 98 60 98 L 32 98 Z M 48 34 V 48 H 60 C 66 48 68 44 68 40 C 68 36 66 34 60 34 Z M 48 64 V 84 H 60 C 66 84 68 80 68 74 C 68 68 66 64 60 64 Z" fill="url(#bGrad)" />
+        </g>
         
-        <!-- Huruf B (Lebih tebal & tumpul) -->
-        <path d="M 32 20 
-                 L 62 20 
-                 C 76 20 84 28 84 40 
-                 C 84 48 78 54 71 56 
-                 C 80 58 86 66 86 76 
-                 C 86 90 76 96 60 96 
-                 L 32 96 
-                 Z 
-                 M 48 34 
-                 L 60 34 
-                 C 67 34 70 37 70 41 
-                 C 70 45 67 48 60 48 
-                 L 48 48 
-                 Z 
-                 M 48 62 
-                 L 61 62 
-                 C 69 62 72 66 72 73 
-                 C 72 80 69 82 61 82 
-                 L 48 82 
-                 Z" 
-              fill="url(#b-grad)" />
-              
-        <!-- Not Balok Putih -->
+        <!-- Not Balok -->
         <g fill="#ffffff">
-          <!-- Kepala Not -->
-          <ellipse cx="68" cy="78" rx="13" ry="9.5" transform="rotate(-15 68 78)" />
-          <!-- Tangkai Not Melengkung -->
-          <path d="M 78 36 
-                   L 78 78 
-                   C 78 78 88 75 88 65 
-                   L 88 46 
-                   C 88 46 83 39 78 36 Z" />
+          <ellipse cx="66" cy="75" rx="13" ry="9.5" transform="rotate(-15 66 75)" />
+          <path d="M 76 35 V 75 C 76 75 82 75 82 70 V 42 Z" />
+          <path d="M 76 35 C 88 38 90 52 88 62 C 84 50 80 46 76 44 Z" />
         </g>
       </svg>
-      
-      <!-- JIKA MAU PAKAI GAMBAR ASLI, HAPUS TAG SVG DI ATAS, LALU HAPUS TANDA KOMENTAR DI BAWAH INI:
-      <img src="logo.png" alt="Basuki Music">
-      -->
     </div>
     <div class="brand-text">
       <h1>Basuki Music</h1>
