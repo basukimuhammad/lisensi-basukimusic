@@ -4,8 +4,8 @@
   "trailingSlash": false,
   "rewrites": [
     {
-      "source": "/__/auth/(.*)",
-      "destination": "https://basuki-music-lisensi.firebaseapp.com/__/auth/$1"
+      "source": "/api/license",
+      "destination": "/api/license.js"
     },
     {
       "source": "/((?!api/).*)",
