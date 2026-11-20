@@ -181,6 +181,13 @@
   .device-row:first-child{border-top:0}
   .device-row .name{font-weight:600;color:var(--ink);font-size:13px}
   .device-row .sub{color:var(--mut2);font-size:11.5px;margin-top:2px}
+  .device-history{margin-top:8px;border-top:1px dashed rgba(255,255,255,.1);padding-top:8px}
+  .device-history summary{cursor:pointer;list-style:none;color:var(--mut);font-size:12px;font-weight:700;padding:5px 0}
+  .device-history summary::-webkit-details-marker{display:none}
+  .device-history summary:before{content:'▸';display:inline-block;margin-right:7px;color:var(--p2);transition:transform .15s}
+  .device-history[open] summary:before{transform:rotate(90deg)}
+  .device-history-note{font-size:11px;line-height:1.5;color:var(--mut2);padding:4px 0 6px}
+
 
   /* Lock card & Welcome Screen */
   .lock-card{max-width:400px;margin:10vh auto;text-align:center}
@@ -1038,9 +1045,18 @@ function renderCreatedChart(licenses){
   });
 }
 
+function licenseTypeOf(item){
+  if(['trial','paid','legacy','owner'].includes(item.licenseType)) return item.licenseType;
+  const note=String(item.note||'').toLowerCase();
+  if(note.includes('trial 7 hari') || note.startsWith('trial')) return 'trial';
+  if(item.isPermanent && String(item.email||'').toLowerCase()==='muhammadbasuki336@gmail.com') return 'owner';
+  if(item.kind==='paid') return 'paid';
+  return item.kind==='legacy'?'legacy':(item.kind||'paid');
+}
+
 function renderTypesChart(licenses){
   const types={trial:0,paid:0,legacy:0,owner:0};
-  for(const l of licenses){ const t=l.kind||'paid'; types[t]=(types[t]||0)+1; }
+  for(const l of licenses){ const t=licenseTypeOf(l); if(Object.prototype.hasOwnProperty.call(types,t)) types[t]++; }
   if(chartTypes) chartTypes.destroy();
   const ctx=document.getElementById('chart-types').getContext('2d');
   chartTypes=new Chart(ctx,{
@@ -1072,19 +1088,30 @@ function renderLicenseList(licenses){
                 : pending ? '<span class="badge warn">Belum aktif</span>'
                 : '<span class="badge good">Aktif</span>';
     
-    let kindLabel = item.kind;
-    if(item.kind === 'trial') kindLabel = 'Trial Web';
-    if(item.kind === 'legacy') kindLabel = 'Kunci v11 (APK)';
-    if(item.kind === 'paid') kindLabel = 'Web Berbayar';
-    if(item.kind === 'owner') kindLabel = 'Owner';
+    const licenseType=licenseTypeOf(item);
+    let kindLabel = licenseType;
+    if(licenseType === 'trial') kindLabel = 'Trial 7 hari';
+    if(licenseType === 'legacy') kindLabel = 'Kunci v11 (APK)';
+    if(licenseType === 'paid') kindLabel = 'Berbayar';
+    if(licenseType === 'owner') kindLabel = 'Owner';
 
     const keyPanel = item.key
       ? `<div class="key-box">${escapeHtml(item.key)}</div><div class="row"><button class="btn ghost small" type="button" data-copy="${escapeHtml(item.key)}">Salin Kunci</button></div>`
       : `<div class="muted" style="font-size:11.5px;margin-top:6px">Kunci tidak tersedia di server (dibuat sebelum fitur ini ditambahkan).</div>`;
-    const devices = (item.devices||[]).map(dev=>{
+    const allDevices = item.devices||[];
+    const activeDevices = allDevices.filter(dev=>dev.status==='active');
+    const historyDevices = allDevices.filter(dev=>dev.status!=='active');
+    const deviceRow = dev=>{
       const active=dev.status==='active';
-      return `<div class="device-row"><div><div class="name">${escapeHtml(dev.model||'Perangkat')}</div><div class="sub">${escapeHtml(dev.androidVersion||'—')} • ${active?'aktif':'tidak aktif'}<br>Terakhir: ${dateText(dev.lastUseMs)}</div></div><button class="${active?'btn danger small':'btn ghost small'}" data-action="device" data-doc="${escapeHtml(item.docId)}" data-device="${escapeHtml(dev.deviceId)}" data-block="${active?'1':'0'}">${active?'Blokir':'Buka'}</button></div>`;
-    }).join('') || '<div class="muted" style="font-size:12px;padding:8px 0">Belum ada perangkat.</div>';
+      const blocked=dev.status==='blocked';
+      const state=active?'aktif':blocked?'diblokir':'instalasi lama';
+      const actionLabel=active?'Blokir':blocked?'Buka blokir':'Aktifkan';
+      return `<div class="device-row"><div><div class="name">${escapeHtml(dev.model||'Perangkat')}</div><div class="sub">${escapeHtml(dev.androidVersion||'—')} • ${state}<br>Terakhir: ${dateText(dev.lastUseMs)}</div></div><button class="${active?'btn danger small':'btn ghost small'}" data-action="device" data-doc="${escapeHtml(item.docId)}" data-device="${escapeHtml(dev.deviceId)}" data-block="${active?'1':'0'}">${actionLabel}</button></div>`;
+    };
+    const activeRows=activeDevices.map(deviceRow).join('');
+    const historyRows=historyDevices.map(deviceRow).join('');
+    const devices = (activeRows || '<div class="muted" style="font-size:12px;padding:8px 0">Tidak ada perangkat aktif.</div>') +
+      (historyDevices.length ? `<details class="device-history"><summary>Riwayat instalasi lama (${historyDevices.length})</summary><div class="device-history-note">Riwayat ini tidak dihitung sebagai perangkat aktif. Data disimpan agar Owner bisa memeriksa atau mengaktifkan kembali instalasi sebelumnya.</div>${historyRows}</details>` : '');
     
     return `<div class="lic-card">
       <div class="lic-head">
@@ -1155,8 +1182,8 @@ $('online-licenses').addEventListener('click', async e=>{
 
 $('online-csv').addEventListener('click', ()=>{
   const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
-  const rows=[['license_id','email','kind','note','created','expires','permanent','revoked','active_devices','device_limit','prefix','suffix'].join(',')];
-  for(const l of onlineData.licenses||[]) rows.push([l.licenseId,l.email,l.kind,l.note,dateText(l.createdAtMs),l.isPermanent?'':dateText(l.expiresAtMs),l.isPermanent,l.revoked,l.activeDeviceCount,l.deviceLimit,l.keyPrefix,l.keySuffix].map(q).join(','));
+  const rows=[['license_id','email','license_type','key_format','note','created','expires','permanent','revoked','active_devices','device_limit','prefix','suffix'].join(',')];
+  for(const l of onlineData.licenses||[]) rows.push([l.licenseId,l.email,licenseTypeOf(l),l.kind,l.note,dateText(l.createdAtMs),l.isPermanent?'':dateText(l.expiresAtMs),l.isPermanent,l.revoked,l.activeDeviceCount,l.deviceLimit,l.keyPrefix,l.keySuffix].map(q).join(','));
   const blob=new Blob([rows.join('\n')],{type:'text/csv;charset=utf-8'});
   const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='basuki-lisensi-online.csv'; a.click(); URL.revokeObjectURL(url);
 });
