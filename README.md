@@ -91,3 +91,14 @@ File patch APK terpisah dari ZIP proyek Vercel. Setelah domain Vercel tersedia, 
 - ID perangkat berupa ID acak instalasi, bukan IMEI/serial number. Menghapus data aplikasi dapat menghasilkan ID instalasi baru.
 - Perubahan blokir berlaku saat aplikasi online dan berhasil memeriksa server berikutnya; perangkat offline baru menerima perubahan setelah tersambung kembali.
 - Uji dulu trial kedua pada akun yang sama (harus ditolak), klaim kunci dari akun berbeda, aktivasi perangkat kedua, blokir perangkat, blokir lisensi, dan perpanjangan masa aktif.
+
+## 6. Penyiapan kunci penandatangan APK (satu kali)
+
+Setelah kode terbaru ter-deploy dan Environment Variables terisi:
+
+1. Buka website, login sebagai Owner, lalu buka kunci admin memakai passphrase yang sudah ada.
+2. Saat admin terbuka, website mengirim JWK privat melalui HTTPS. Server memastikan pasangan kunci cocok dengan public key yang tertanam di APK, lalu menyimpan JWK privat secara terenkripsi di Firestore.
+3. Buka `/api/health`. Pastikan `ok: true` dan `legacySigner.ready: true`. API health tidak mengirim JWK privat.
+4. Setelah itu, pengguna dapat menghubungkan kunci dari website dan APK memeriksa lisensi melalui `/api/license-device`.
+
+Jangan mengganti `LICENSE_KEY_ENCRYPTION_SECRET` setelah signer tersimpan. Jika secret berubah, data signer tidak dapat dibuka lagi dan harus dipasang ulang menggunakan kunci yang benar.

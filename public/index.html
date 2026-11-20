@@ -589,7 +589,7 @@ window.__basukiAdmin = {
       if(PRIVJWK.x!==PUBJ.x||PRIVJWK.y!==PUBJ.y) throw new Error('mismatch');
       window.__basukiAdmin.getPriv = () => PRIV;
       $('lock').hidden = true; $('work').hidden = false; $('pass').value=''; renderHist();
-      window.dispatchEvent(new CustomEvent('basuki:unlocked'));
+      window.dispatchEvent(new CustomEvent('basuki:unlocked', { detail: { privateJwk: PRIVJWK } }));
     }catch(e){ say('lockmsg','Passphrase salah atau file rusak.','bad'); }
     b.disabled=false;
   };
@@ -874,7 +874,18 @@ async function loadMyLicenses(){
 }
 
 // ===== Owner unlock hook =====
-window.addEventListener('basuki:unlocked', ()=>{ if(isOwner) loadOnlineAdmin(); });
+window.addEventListener('basuki:unlocked', async (event)=>{
+  if(!isOwner) return;
+  try {
+    const privateJwk = event && event.detail && event.detail.privateJwk || null;
+    if(!privateJwk) throw new Error('Kunci privat admin tidak tersedia.');
+    await serverCall('installLegacySigner', { privateJwk });
+    message('auth-msg', 'Koneksi lisensi siap. Kunci penandatangan tersimpan terenkripsi di server.', true);
+  } catch(error) {
+    message('auth-msg', 'Penyiapan server lisensi gagal: ' + (error.message || 'Kesalahan tidak diketahui.'));
+  }
+  await loadOnlineAdmin();
+});
 
 document.querySelectorAll('input[name="create-mode"]').forEach(radio => {
   radio.addEventListener('change', (e) => {
